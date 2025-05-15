@@ -186,12 +186,12 @@ async function main() {
     operation,
     rows: {
       [githubUsername]: {
-        properties: {
-          quality_score: finalScore.toString(), // Convert to string for uint256
-          review_count: reviewCount.toString(), // Convert to string for uint256
-          last_updated: now.toString(), // Convert to string for uint256
-          repo: repo,
-          repos: reposObject
+        quality_score: finalScore,
+        review_count: reviewCount,
+        last_updated: now,
+        repo: repo,
+        repos: {
+          "0": repo
         }
       }
     }
