@@ -98,6 +98,32 @@ async function main() {
   const propListData = await propListRes.json();
   console.log("Property list configuration:", JSON.stringify(propListData, null, 2));
 
+  // Check if property list needs to be published first
+  if (!propListData.last_published_at) {
+    console.log("Property list has never been published. Publishing first...");
+    const publishRes = await fetch(
+      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/publish`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    
+    if (!publishRes.ok) {
+      console.error("Failed to publish property list:", await publishRes.text());
+      throw new Error("Failed to publish property list");
+    }
+    
+    const publishData = await publishRes.json();
+    console.log("Property list publish response:", publishData);
+    
+    // Wait a moment for the publish to take effect
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
   // 2. Check if user already exists in property list
   let operation = "create";
   let finalScore = score;
