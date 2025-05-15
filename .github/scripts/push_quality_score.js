@@ -126,9 +126,34 @@ async function main() {
     const publishData = await publishRes.json();
     console.log("Property list publish response:", publishData);
     
-    // Wait longer for the publish to take effect
-    console.log("Waiting for publish to take effect...");
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Wait for publish to complete
+    console.log("Waiting for publish to complete...");
+    let publishComplete = false;
+    let attempts = 0;
+    while (!publishComplete && attempts < 10) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const statusRes = await fetch(
+        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const statusData = await statusRes.json();
+      console.log("Property list status:", statusData.status);
+      if (statusData.last_published_at) {
+        publishComplete = true;
+        console.log("Property list published successfully");
+      }
+      attempts++;
+    }
+    
+    if (!publishComplete) {
+      throw new Error("Property list publish did not complete in time");
+    }
   }
 
   // 2. Check if user already exists in property list
@@ -186,12 +211,12 @@ async function main() {
     operation,
     rows: {
       [githubUsername]: {
-        quality_score: finalScore,
-        review_count: reviewCount,
-        last_updated: now,
-        repo: repo,
-        repos: {
-          "0": repo
+        properties: {
+          quality_score: finalScore.toString(), // Convert to string for uint256
+          review_count: reviewCount.toString(), // Convert to string for uint256
+          last_updated: now.toString(), // Convert to string for uint256
+          repo: repo,
+          repos: reposObject
         }
       }
     }
