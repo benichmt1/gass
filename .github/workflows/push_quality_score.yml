@@ -1,0 +1,27 @@
+name: Push Quality Score to O2 Oracle
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  push-score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm install node-fetch
+      - name: Push Quality Score
+        run: node .github/scripts/push_quality_score.js
+        env:
+          O2_EMAIL: ${{ secrets.O2_EMAIL }}
+          O2_PASSWORD: ${{ secrets.O2_PASSWORD }}
+          O2_APP_ID: ${{ secrets.O2_APP_ID }}
+          O2_PROP_LIST_ID: ${{ secrets.O2_PROP_LIST_ID }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          QUALITY_SCORE: 77 # Placeholder, or set dynamically 
