@@ -181,24 +181,20 @@ async function main() {
       console.log("Found user by repo, will migrate to use index");
       // Delete the old row with row_id
       const deleteRes = await fetch(
-        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
+        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${existingUser.row_id}`,
         {
-          method: "PATCH",
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            operation: "delete",
-            rows: [{
-              index: existingUser.row_id
-            }]
-          })
+          }
         }
       );
       
       if (!deleteRes.ok) {
         console.error("Failed to delete old row:", await deleteRes.text());
+      } else {
+        console.log("Successfully deleted old row");
       }
       
       // Set operation to create since we're making a new row with the correct index
