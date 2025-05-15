@@ -241,49 +241,43 @@ async function main() {
   };
   console.log("Request body:", JSON.stringify(requestBody, null, 2));
 
-  // First try to create/update the row
+  // Try to create/update the row
   const createRes = await fetch(
-    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
+    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/row`,
     {
-      method: "POST",  // Changed from PATCH to POST
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({
+        index: githubUsername,
+        data: requestBody.rows[0].data
+      })
     }
   );
 
+  let responseText;
+  try {
+    responseText = await createRes.text();
+    console.log("Raw response:", responseText);
+  } catch (error) {
+    console.error("Failed to read response:", error);
+    responseText = "Failed to read response";
+  }
+
   if (!createRes.ok) {
-    const errorData = await createRes.json();
-    console.error("Failed to create/update property list item:", errorData);
-    console.error("Request body:", JSON.stringify(requestBody, null, 2));
-    
-    // If POST fails, try PATCH
-    console.log("Trying PATCH method instead...");
-    const patchRes = await fetch(
-      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody)
-      }
-    );
+    console.error("Failed to create/update property list item. Status:", createRes.status);
+    console.error("Response:", responseText);
+    throw new Error("Failed to create/update property list item: " + responseText);
+  }
 
-    if (!patchRes.ok) {
-      const patchErrorData = await patchRes.json();
-      console.error("Failed to create/update property list item with PATCH:", patchErrorData);
-      throw new Error("Failed to create/update property list item: " + (patchErrorData.message || 'Unknown error'));
-    }
-
-    const patchData = await patchRes.json();
-    console.log("Property list item created/updated with PATCH:", JSON.stringify(patchData, null, 2));
-  } else {
-    const createData = await createRes.json();
-    console.log("Property list item created/updated with POST:", JSON.stringify(createData, null, 2));
+  try {
+    const createData = JSON.parse(responseText);
+    console.log("Property list item created/updated:", JSON.stringify(createData, null, 2));
+  } catch (error) {
+    console.error("Failed to parse response as JSON:", error);
+    console.log("Raw response was:", responseText);
   }
 
   // Publish the changes
