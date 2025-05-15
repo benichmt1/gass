@@ -227,33 +227,27 @@ async function main() {
   // Create or update property list item with quality score
   console.log(`\n${operation === 'create' ? 'Creating' : 'Updating'} property list item...`);
   const requestBody = {
-    operation: operation,
-    rows: [{
-      index: githubUsername,
-      data: {
-        repo: repo,
-        repos: reposObj,
-        last_updated: Math.floor(Date.now() / 1000),
-        review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
-        quality_score: finalScore
-      }
-    }]
+    index: githubUsername,
+    data: {
+      repo: repo,
+      repos: reposObj,
+      last_updated: Math.floor(Date.now() / 1000),
+      review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
+      quality_score: finalScore
+    }
   };
   console.log("Request body:", JSON.stringify(requestBody, null, 2));
 
   // Try to create/update the row
   const createRes = await fetch(
-    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/row`,
+    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${githubUsername}`,
     {
-      method: "POST",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        index: githubUsername,
-        data: requestBody.rows[0].data
-      })
+      body: JSON.stringify(requestBody)
     }
   );
 
