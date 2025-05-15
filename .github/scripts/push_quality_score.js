@@ -182,6 +182,7 @@ async function main() {
       operation = "update";
     }
   } else {
+    console.log("Found user by index, will update existing row");
     operation = "update";
   }
   
@@ -207,10 +208,12 @@ async function main() {
 
   // Create or update property list item with quality score
   console.log(`\n${operation === 'create' ? 'Creating' : 'Updating'} property list item...`);
+  
+  // For updates, we need to include the row_id
   const requestBody = {
     operation: operation,
     rows: {
-      [githubUsername]: {
+      [operation === 'update' ? existingUser.row_id : githubUsername]: {
         repo: repo,
         repos: reposObj,
         last_updated: Math.floor(Date.now() / 1000),
