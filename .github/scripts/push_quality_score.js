@@ -98,6 +98,12 @@ async function main() {
   const propListData = await propListRes.json();
   console.log("Property list configuration:", JSON.stringify(propListData, null, 2));
 
+  // Verify contract deployment
+  if (!propListData.contract_address || !propListData.implementation_address) {
+    console.error("Property list contract is not properly deployed");
+    throw new Error("Property list contract is not properly deployed");
+  }
+
   // Check if property list needs to be published first
   if (!propListData.last_published_at) {
     console.log("Property list has never been published. Publishing first...");
@@ -120,8 +126,9 @@ async function main() {
     const publishData = await publishRes.json();
     console.log("Property list publish response:", publishData);
     
-    // Wait a moment for the publish to take effect
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait longer for the publish to take effect
+    console.log("Waiting for publish to take effect...");
+    await new Promise(resolve => setTimeout(resolve, 5000));
   }
 
   // 2. Check if user already exists in property list
@@ -180,9 +187,9 @@ async function main() {
     rows: {
       [githubUsername]: {
         properties: {
-          quality_score: finalScore,
-          review_count: reviewCount,
-          last_updated: now,
+          quality_score: finalScore.toString(), // Convert to string for uint256
+          review_count: reviewCount.toString(), // Convert to string for uint256
+          last_updated: now.toString(), // Convert to string for uint256
           repo: repo,
           repos: reposObject
         }
