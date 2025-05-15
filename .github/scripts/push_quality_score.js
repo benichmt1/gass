@@ -118,6 +118,62 @@ async function main() {
   
   const rowsData = await rowsRes.json();
   console.log("Current rows:", JSON.stringify(rowsData, null, 2));
+
+  // Check if item exists for this GitHub username
+  const operation = rowsData[githubUsername] ? "update" : "create";
+  console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
+
+  // Create or update property list item with quality score
+  console.log(`\n${operation === 'create' ? 'Creating' : 'Updating'} property list item...`);
+  const createRes = await fetch(
+    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        operation: operation,
+        rows: {
+          [githubUsername]: {
+            quality_score: score,
+            repository: repo,
+            timestamp: new Date().toISOString()
+          }
+        }
+      })
+    }
+  );
+
+  if (!createRes.ok) {
+    console.error("Failed to create/update property list item:", await createRes.text());
+    throw new Error("Failed to create/update property list item");
+  }
+
+  const createData = await createRes.json();
+  console.log("Property list item created/updated:", JSON.stringify(createData, null, 2));
+
+  // Publish the changes
+  console.log("\nPublishing changes...");
+  const publishRes = await fetch(
+    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/publish`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      }
+    }
+  );
+
+  if (!publishRes.ok) {
+    console.error("Failed to publish changes:", await publishRes.text());
+    throw new Error("Failed to publish changes");
+  }
+
+  const publishData = await publishRes.json();
+  console.log("Changes published:", JSON.stringify(publishData, null, 2));
 }
 
 main().catch(console.error); 
