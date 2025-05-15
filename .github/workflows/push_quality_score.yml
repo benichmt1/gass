@@ -23,7 +23,6 @@ jobs:
           git fetch origin ${{ github.event.pull_request.head.ref }}:${{ github.event.pull_request.head.ref }}
           git checkout ${{ github.event.pull_request.head.ref }}
           git diff origin/${{ github.event.pull_request.base.ref }} > pr_diff.txt
-          echo "diff=$(cat pr_diff.txt)" >> $GITHUB_ENV
       - name: Debug env
         run: |
           echo "O2_EMAIL=$O2_EMAIL"
