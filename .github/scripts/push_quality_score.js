@@ -177,8 +177,8 @@ async function main() {
   // Calculate the new score
   let finalScore = score;
   if (existingUser) {
-    const currentScore = existingUser.quality_score || 0;
-    const commitCount = existingUser.commit_count || 0;
+    const currentScore = existingUser.data.quality_score || 0;
+    const commitCount = existingUser.data.review_count || 0;
     // Calculate weighted average: (current_score * commit_count + new_score) / (commit_count + 1)
     finalScore = Math.round((currentScore * commitCount + score) / (commitCount + 1));
     console.log(`Calculating weighted average: (${currentScore} * ${commitCount} + ${score}) / (${commitCount} + 1) = ${finalScore}`);
@@ -208,7 +208,7 @@ async function main() {
           repo: repo,
           repos: reposObj,
           last_updated: Math.floor(Date.now() / 1000), // Convert to uint256 timestamp
-          review_count: existingUser ? (existingUser.review_count || 0) + 1 : 1,
+          review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
           quality_score: finalScore
         }]
       })
