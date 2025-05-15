@@ -169,7 +169,7 @@ async function main() {
   const rows = rowsData.data.rows || [];
   console.log("Parsed rows:", JSON.stringify(rows, null, 2));
   console.log("Looking for github_username:", githubUsername);
-  const existingUser = rows.find(row => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
+  const existingUser = rows.find(row => row.index === githubUsername);
   console.log("Found existing user:", existingUser);
   const operation = existingUser ? "update" : "create";
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
