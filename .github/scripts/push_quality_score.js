@@ -99,18 +99,68 @@ async function main() {
   console.log("Property list configuration:", JSON.stringify(propListData, null, 2));
 
   // Try a simpler request first with just one property
+  const now = Math.floor(Date.now() / 1000); // Unix timestamp
+  const operation = "create";
+  let finalScore = score;
+  let reviewCount = 1;
+  let repos = [repo];
+  try {
+    const getRes = await fetch(
+      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${githubUsername}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (getRes.ok) {
+      const getData = await getRes.json();
+      if (getData && getData.quality_score !== undefined && getData.review_count !== undefined && getData.repos !== undefined) {
+        // User exists, calculate running average and update repos
+        reviewCount = parseInt(getData.review_count) + 1;
+        finalScore = Math.round((parseInt(getData.quality_score) * parseInt(getData.review_count) + score) / reviewCount);
+        repos = Array.isArray(getData.repos) ? getData.repos.slice() : [];
+        if (!repos.includes(repo)) {
+          repos.push(repo);
+        }
+        operation = "update";
+        console.log(`User exists. Running average: old=${getData.quality_score}, count=${getData.review_count}, new=${score}, avg=${finalScore}, repos=${repos}`);
+      }
+    } else if (getRes.status === 404) {
+      // User does not exist, will create
+      operation = "create";
+      finalScore = score;
+      reviewCount = 1;
+      repos = [repo];
+      console.log("User does not exist, will create new row.");
+    } else {
+      console.warn("Unexpected GET response status:", getRes.status);
+    }
+  } catch (err) {
+    console.warn("Could not check for existing user row (proceeding with create):", err);
+  }
+
+  // 3. Push the quality score and metadata
   const testPatchBody = {
     operation: "create",
     rows: {
       [githubUsername]: {
         properties: {
-          quality_score: score
+          quality_score: finalScore,
+          review_count: reviewCount,
+          last_updated: now,
+          repo: repo,
+          repos: {
+            "0": repo  // Convert array to string[string] format
+          }
         }
       }
     }
   };
 
-  console.log("Testing with simplified PATCH body:", JSON.stringify(testPatchBody, null, 2));
+  console.log("Testing with schema-compliant PATCH body:", JSON.stringify(testPatchBody, null, 2));
   const testPatchRes = await fetch(
     `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
     {
@@ -129,50 +179,6 @@ async function main() {
 
   // If test succeeds, proceed with full update
   if (testPatchRes.ok) {
-    const now = Math.floor(Date.now() / 1000); // Unix timestamp
-    const operation = "create";
-    let finalScore = score;
-    let reviewCount = 1;
-    let repos = [repo];
-    try {
-      const getRes = await fetch(
-        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${githubUsername}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (getRes.ok) {
-        const getData = await getRes.json();
-        if (getData && getData.quality_score !== undefined && getData.review_count !== undefined && getData.repos !== undefined) {
-          // User exists, calculate running average and update repos
-          reviewCount = parseInt(getData.review_count) + 1;
-          finalScore = Math.round((parseInt(getData.quality_score) * parseInt(getData.review_count) + score) / reviewCount);
-          repos = Array.isArray(getData.repos) ? getData.repos.slice() : [];
-          if (!repos.includes(repo)) {
-            repos.push(repo);
-          }
-          operation = "update";
-          console.log(`User exists. Running average: old=${getData.quality_score}, count=${getData.review_count}, new=${score}, avg=${finalScore}, repos=${repos}`);
-        }
-      } else if (getRes.status === 404) {
-        // User does not exist, will create
-        operation = "create";
-        finalScore = score;
-        reviewCount = 1;
-        repos = [repo];
-        console.log("User does not exist, will create new row.");
-      } else {
-        console.warn("Unexpected GET response status:", getRes.status);
-      }
-    } catch (err) {
-      console.warn("Could not check for existing user row (proceeding with create):", err);
-    }
-
-    // 3. Push the quality score and metadata
     const patchBody = {
       operation,
       rows: {
@@ -180,9 +186,11 @@ async function main() {
           properties: {
             quality_score: finalScore,
             review_count: reviewCount,
-            repos: repos,
             last_updated: now,
-            repo: repo
+            repo: repo,
+            repos: {
+              "0": repo  // Convert array to string[string] format
+            }
           }
         }
       }
