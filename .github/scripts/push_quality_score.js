@@ -77,7 +77,42 @@ async function main() {
   }
   const token = loginData.token;
 
-  // 2. Push the quality score
+  // 2. Check if user already exists in property list
+  let operation = "create";
+  let finalScore = score;
+  let reviewCount = 1;
+  let repos = [repo];
+  try {
+    const getRes = await fetch(
+      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${githubUsername}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (getRes.ok) {
+      const getData = await getRes.json();
+      if (getData && getData.quality_score !== undefined && getData.review_count !== undefined && getData.repos !== undefined) {
+        // User exists, calculate running average and update repos
+        reviewCount = parseInt(getData.review_count) + 1;
+        finalScore = Math.round((parseInt(getData.quality_score) * parseInt(getData.review_count) + score) / reviewCount);
+        // Merge repos, ensuring uniqueness
+        repos = Array.isArray(getData.repos) ? getData.repos.slice() : [];
+        if (!repos.includes(repo)) {
+          repos.push(repo);
+        }
+        operation = "update";
+        console.log(`User exists. Running average: old=${getData.quality_score}, count=${getData.review_count}, new=${score}, avg=${finalScore}, repos=${repos}`);
+      }
+    }
+  } catch (err) {
+    console.warn("Could not check for existing user row (proceeding with create):", err);
+  }
+
+  // 3. Push the quality score and metadata
   const now = Math.floor(Date.now() / 1000); // Unix timestamp
   const patchRes = await fetch(
     `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
@@ -88,10 +123,12 @@ async function main() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        operation: "create",
+        operation: operation,
         rows: {
           [githubUsername]: {
-            quality_score: score,
+            quality_score: finalScore,
+            review_count: reviewCount,
+            repos: repos,
             last_updated: now,
             repo: repo
           }
@@ -100,9 +137,12 @@ async function main() {
     }
   );
   const patchData = await patchRes.json();
+  if (patchData.status !== 'success') {
+    console.error("O2 Oracle patch error details:", patchData);
+  }
   console.log("Patch response:", patchData);
 
-  // 3. Publish the changes
+  // 4. Publish the changes
   const publishRes = await fetch(
     `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/publish`,
     {
