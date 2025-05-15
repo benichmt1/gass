@@ -153,11 +153,12 @@ async function main() {
       body: JSON.stringify({
         operation: operation,
         rows: [{
-          github_username: githubUsername,
-          quality_score: finalScore,
-          commit_count: existingUser ? (existingUser.commit_count || 0) + 1 : 1,
-          repository: repo,
-          timestamp: new Date().toISOString()
+          index: githubUsername,
+          repo: repo,
+          repos: { [repo]: true },
+          last_updated: Math.floor(Date.now() / 1000), // Convert to uint256 timestamp
+          review_count: existingUser ? (existingUser.review_count || 0) + 1 : 1,
+          quality_score: finalScore
         }]
       })
     }
