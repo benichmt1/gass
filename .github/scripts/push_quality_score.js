@@ -241,10 +241,11 @@ async function main() {
   };
   console.log("Request body:", JSON.stringify(requestBody, null, 2));
 
+  // First try to create/update the row
   const createRes = await fetch(
     `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
     {
-      method: "PATCH",
+      method: "POST",  // Changed from PATCH to POST
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -257,11 +258,33 @@ async function main() {
     const errorData = await createRes.json();
     console.error("Failed to create/update property list item:", errorData);
     console.error("Request body:", JSON.stringify(requestBody, null, 2));
-    throw new Error("Failed to create/update property list item: " + (errorData.message || 'Unknown error'));
-  }
+    
+    // If POST fails, try PATCH
+    console.log("Trying PATCH method instead...");
+    const patchRes = await fetch(
+      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody)
+      }
+    );
 
-  const createData = await createRes.json();
-  console.log("Property list item created/updated:", JSON.stringify(createData, null, 2));
+    if (!patchRes.ok) {
+      const patchErrorData = await patchRes.json();
+      console.error("Failed to create/update property list item with PATCH:", patchErrorData);
+      throw new Error("Failed to create/update property list item: " + (patchErrorData.message || 'Unknown error'));
+    }
+
+    const patchData = await patchRes.json();
+    console.log("Property list item created/updated with PATCH:", JSON.stringify(patchData, null, 2));
+  } else {
+    const createData = await createRes.json();
+    console.log("Property list item created/updated with POST:", JSON.stringify(createData, null, 2));
+  }
 
   // Publish the changes
   console.log("\nPublishing changes...");
