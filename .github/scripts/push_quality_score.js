@@ -115,20 +115,20 @@ async function main() {
   // 3. Push the quality score and metadata
   const now = Math.floor(Date.now() / 1000); // Unix timestamp
   const patchBody = {
-    schemas: [
-      "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-    ],
-    Operations: [
-      { op: "replace", path: "quality_score", value: finalScore },
-      { op: "replace", path: "review_count", value: reviewCount },
-      { op: "replace", path: "repos", value: repos },
-      { op: "replace", path: "last_updated", value: now },
-      { op: "replace", path: "repo", value: repo }
-    ]
+    operation: "update",
+    rows: {
+      [githubUsername]: {
+        quality_score: finalScore,
+        review_count: reviewCount,
+        repos: repos,
+        last_updated: now,
+        repo: repo
+      }
+    }
   };
   console.log("PATCH body:", JSON.stringify(patchBody, null, 2));
   const patchRes = await fetch(
-    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${githubUsername}`,
+    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
     {
       method: "PATCH",
       headers: {
