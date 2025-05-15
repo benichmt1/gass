@@ -20,19 +20,7 @@ if (!email || !password || !appId || !propListId || !openRouterApiKey) {
 }
 
 async function getCodeReviewScore(diff) {
-  const prompt = `Please review this code diff and provide a quality score from 0-100. Consider:
-1. Code quality and readability
-2. Best practices and patterns
-3. Potential bugs or issues
-4. Documentation and comments
-5. Test coverage (if applicable)
-
-Here's the diff:
-${diff}
-
-Provide your response in this exact format:
-Score: [number between 0-100]
-Reasoning: [brief explanation]`;
+  const prompt = `Please review this code diff and provide a quality score from 0-100. Consider:\n1. Code quality and readability\n2. Best practices and patterns\n3. Potential bugs or issues\n4. Documentation and comments\n5. Test coverage (if applicable)\n\nHere's the diff:\n${diff}\n\nProvide your response in this exact format:\nScore: [number between 0-100]\nReasoning: [brief explanation]`;
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -49,7 +37,18 @@ Reasoning: [brief explanation]`;
     })
   });
 
+  if (!response.ok) {
+    console.error("OpenRouter API returned HTTP status", response.status);
+    throw new Error("OpenRouter API call failed");
+  }
+
   const data = await response.json();
+  console.log("OpenRouter API raw response:", JSON.stringify(data, null, 2));
+
+  if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+    console.error("Unexpected OpenRouter API response format:", data);
+    throw new Error("Failed to get code review from OpenRouter API");
+  }
   const reviewText = data.choices[0].message.content;
   
   // Extract score from response
