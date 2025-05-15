@@ -20,7 +20,48 @@ if (!email || !password || !appId || !propListId || !openRouterApiKey) {
 }
 
 async function getCodeReviewScore(diff) {
-  const prompt = `Please review this code diff and provide a quality score from 0-100. Consider:\n1. Code quality and readability\n2. Best practices and patterns\n3. Potential bugs or issues\n4. Documentation and comments\n5. Test coverage (if applicable)\n\nHere's the diff:\n${diff}\n\nProvide your response in this exact format:\nScore: [number between 0-100]\nReasoning: [brief explanation]`;
+  const prompt = `Please perform a rigorous and critical code review of this diff. Be thorough and strict in your evaluation. Consider:
+
+1. Code Quality & Readability:
+   - Is the code clean, well-structured, and easy to understand?
+   - Are there any unnecessary complexities or redundancies?
+   - Is the code following best practices and design patterns?
+
+2. Potential Issues & Bugs:
+   - Are there any obvious bugs or edge cases not handled?
+   - Are there security vulnerabilities or performance concerns?
+   - Is error handling comprehensive and appropriate?
+
+3. Documentation & Comments:
+   - Is the code well-documented with clear comments?
+   - Are complex logic sections explained?
+   - Is there sufficient inline documentation?
+
+4. Testing & Maintainability:
+   - Is the code testable and maintainable?
+   - Are there any hardcoded values or magic numbers?
+   - Is the code modular and reusable?
+
+5. Best Practices:
+   - Does it follow language/framework conventions?
+   - Are there any anti-patterns or code smells?
+   - Is the code DRY (Don't Repeat Yourself)?
+
+Be particularly critical of:
+- Poor error handling
+- Lack of documentation
+- Code duplication
+- Unclear or complex logic
+- Security vulnerabilities
+- Performance issues
+- Inconsistent coding style
+
+Here's the diff:
+${diff}
+
+Provide your response in this exact format:
+Score: [number between 0-100]
+Reasoning: [detailed explanation of issues found and why the score was given]`;
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -126,15 +167,51 @@ async function main() {
 
   // Access rows from the nested data structure
   const rows = rowsData.data.rows || [];
-  const existingUser = rows.find(row => row.github_username === githubUsername);
-  const operation = existingUser ? "update" : "create";
+  console.log("Parsed rows:", JSON.stringify(rows, null, 2));
+  console.log("Looking for github_username:", githubUsername);
+  
+  // First try to find by index
+  let existingUser = rows.find(row => row.index === githubUsername);
+  let operation = "create"; // Initialize operation variable
+  
+  // If not found by index, try to find by repo (for migration)
+  if (!existingUser) {
+    existingUser = rows.find(row => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
+    if (existingUser) {
+      console.log("Found user by repo, will migrate to use index");
+      // Delete the old row with row_id
+      const deleteRes = await fetch(
+        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${existingUser.row_id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      
+      if (!deleteRes.ok) {
+        console.error("Failed to delete old row:", await deleteRes.text());
+      } else {
+        console.log("Successfully deleted old row");
+      }
+      
+      // Set operation to create since we're making a new row with the correct index
+      operation = "create";
+    }
+  } else {
+    operation = "update";
+  }
+  
+  console.log("Found existing user:", existingUser);
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
 
   // Calculate the new score
   let finalScore = score;
   if (existingUser) {
-    const currentScore = existingUser.quality_score || 0;
-    const commitCount = existingUser.commit_count || 0;
+    const currentScore = existingUser.data.quality_score || 0;
+    const commitCount = existingUser.data.review_count || 0;
     // Calculate weighted average: (current_score * commit_count + new_score) / (commit_count + 1)
     finalScore = Math.round((currentScore * commitCount + score) / (commitCount + 1));
     console.log(`Calculating weighted average: (${currentScore} * ${commitCount} + ${score}) / (${commitCount} + 1) = ${finalScore}`);
@@ -149,6 +226,21 @@ async function main() {
 
   // Create or update property list item with quality score
   console.log(`\n${operation === 'create' ? 'Creating' : 'Updating'} property list item...`);
+  const requestBody = {
+    operation: operation,
+    rows: {
+      [githubUsername]: {
+        repo: repo,
+        repos: reposObj,
+        last_updated: Math.floor(Date.now() / 1000),
+        review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
+        quality_score: finalScore
+      }
+    }
+  };
+  console.log("Request body:", JSON.stringify(requestBody, null, 2));
+
+  // Try to create/update the row
   const createRes = await fetch(
     `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
     {
@@ -157,28 +249,32 @@ async function main() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        operation: operation,
-        rows: [{
-          index: githubUsername,
-          repo: repo,
-          repos: reposObj,
-          last_updated: Math.floor(Date.now() / 1000), // Convert to uint256 timestamp
-          review_count: existingUser ? (existingUser.review_count || 0) + 1 : 1,
-          quality_score: finalScore
-        }]
-      })
+      body: JSON.stringify(requestBody)
     }
   );
 
-  if (!createRes.ok) {
-    const errorData = await createRes.json();
-    console.error("Failed to create/update property list item:", errorData);
-    throw new Error("Failed to create/update property list item: " + (errorData.message || 'Unknown error'));
+  let responseText;
+  try {
+    responseText = await createRes.text();
+    console.log("Raw response:", responseText);
+  } catch (error) {
+    console.error("Failed to read response:", error);
+    responseText = "Failed to read response";
   }
 
-  const createData = await createRes.json();
-  console.log("Property list item created/updated:", JSON.stringify(createData, null, 2));
+  if (!createRes.ok) {
+    console.error("Failed to create/update property list item. Status:", createRes.status);
+    console.error("Response:", responseText);
+    throw new Error("Failed to create/update property list item: " + responseText);
+  }
+
+  try {
+    const createData = JSON.parse(responseText);
+    console.log("Property list item created/updated:", JSON.stringify(createData, null, 2));
+  } catch (error) {
+    console.error("Failed to parse response as JSON:", error);
+    console.log("Raw response was:", responseText);
+  }
 
   // Publish the changes
   console.log("\nPublishing changes...");
@@ -194,8 +290,9 @@ async function main() {
   );
 
   if (!publishRes.ok) {
-    console.error("Failed to publish changes:", await publishRes.text());
-    throw new Error("Failed to publish changes");
+    const errorText = await publishRes.text();
+    console.error("Failed to publish changes:", errorText);
+    throw new Error("Failed to publish changes: " + errorText);
   }
 
   const publishData = await publishRes.json();
