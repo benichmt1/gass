@@ -119,8 +119,14 @@ async function main() {
   const rowsData = await rowsRes.json();
   console.log("Current rows:", JSON.stringify(rowsData, null, 2));
 
-  // Check if item exists for this GitHub username
-  const existingUser = rowsData[githubUsername];
+  if (rowsData.status !== 'success') {
+    console.error("Failed to fetch rows:", rowsData.message || 'Unknown error');
+    throw new Error("Failed to fetch rows: " + (rowsData.message || 'Unknown error'));
+  }
+
+  // Access rows from the nested data structure
+  const rows = rowsData.data.rows || [];
+  const existingUser = rows.find(row => row.github_username === githubUsername);
   const operation = existingUser ? "update" : "create";
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
 
@@ -146,21 +152,21 @@ async function main() {
       },
       body: JSON.stringify({
         operation: operation,
-        rows: {
-          [githubUsername]: {
-            quality_score: finalScore,
-            commit_count: existingUser ? (existingUser.commit_count || 0) + 1 : 1,
-            repository: repo,
-            timestamp: new Date().toISOString()
-          }
-        }
+        rows: [{
+          github_username: githubUsername,
+          quality_score: finalScore,
+          commit_count: existingUser ? (existingUser.commit_count || 0) + 1 : 1,
+          repository: repo,
+          timestamp: new Date().toISOString()
+        }]
       })
     }
   );
 
   if (!createRes.ok) {
-    console.error("Failed to create/update property list item:", await createRes.text());
-    throw new Error("Failed to create/update property list item");
+    const errorData = await createRes.json();
+    console.error("Failed to create/update property list item:", errorData);
+    throw new Error("Failed to create/update property list item: " + (errorData.message || 'Unknown error'));
   }
 
   const createData = await createRes.json();
