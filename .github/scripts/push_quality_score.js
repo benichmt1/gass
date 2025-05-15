@@ -178,27 +178,8 @@ async function main() {
   if (!existingUser) {
     existingUser = rows.find(row => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
     if (existingUser) {
-      console.log("Found user by repo, will migrate to use index");
-      // Delete the old row with row_id
-      const deleteRes = await fetch(
-        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows/${existingUser.row_id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
-      
-      if (!deleteRes.ok) {
-        console.error("Failed to delete old row:", await deleteRes.text());
-      } else {
-        console.log("Successfully deleted old row");
-      }
-      
-      // Set operation to create since we're making a new row with the correct index
-      operation = "create";
+      console.log("Found user by repo, will update existing row");
+      operation = "update";
     }
   } else {
     operation = "update";
@@ -219,9 +200,9 @@ async function main() {
 
   // Prepare repos object
   let reposObj = { [repo]: repo };
-  if (existingUser && existingUser.repos) {
+  if (existingUser && existingUser.data && existingUser.data.repos) {
     // Merge existing repos with the new repo
-    reposObj = { ...existingUser.repos, [repo]: repo };
+    reposObj = { ...existingUser.data.repos, [repo]: repo };
   }
 
   // Create or update property list item with quality score
