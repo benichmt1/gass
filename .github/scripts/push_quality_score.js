@@ -148,6 +148,11 @@ async function main() {
       body: JSON.stringify(patchBody),
     }
   );
+  
+  // Add detailed error logging
+  console.log("PATCH response status:", patchRes.status);
+  console.log("PATCH response headers:", JSON.stringify(Object.fromEntries(patchRes.headers.entries()), null, 2));
+  
   const patchText = await patchRes.text();
   console.log("Raw PATCH response:", patchText);
   let patchData;
@@ -157,6 +162,13 @@ async function main() {
     console.error("PATCH response is not valid JSON.");
     patchData = { error: patchText };
   }
+  
+  if (!patchRes.ok) {
+    console.error("PATCH request failed with status:", patchRes.status);
+    console.error("Full error response:", patchData);
+    throw new Error(`PATCH request failed: ${patchRes.status} ${patchRes.statusText}`);
+  }
+  
   if (!patchData.status || patchData.status !== 'success') {
     console.error("O2 Oracle patch error details:", patchData);
   }
