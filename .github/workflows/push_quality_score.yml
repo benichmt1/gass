@@ -1,7 +1,8 @@
 name: Push Quality Score to O2 Oracle
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
@@ -15,6 +16,32 @@ jobs:
           node-version: '18'
       - name: Install dependencies
         run: npm install node-fetch
+      - name: Get PR diff
+        id: get_diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.head.ref }}
+          git checkout ${{ github.event.pull_request.head.ref }}
+          git diff origin/${{ github.event.pull_request.base.ref }} > pr_diff.txt
+          echo "diff=$(cat pr_diff.txt)" >> $GITHUB_ENV
+      - name: Debug env
+        run: |
+          echo "O2_EMAIL=$O2_EMAIL"
+          echo "O2_PASSWORD=$O2_PASSWORD"
+          echo "O2_APP_ID=$O2_APP_ID"
+          echo "O2_PROP_LIST_ID=$O2_PROP_LIST_ID"
+          echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY"
+          echo "GITHUB_ACTOR=$GITHUB_ACTOR"
+          echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+          echo "PR_DIFF=${PR_DIFF:0:100}..." # Print only first 100 chars for brevity
+        env:
+          O2_EMAIL: ${{ secrets.O2_EMAIL }}
+          O2_PASSWORD: ${{ secrets.O2_PASSWORD }}
+          O2_APP_ID: ${{ secrets.O2_APP_ID }}
+          O2_PROP_LIST_ID: ${{ secrets.O2_PROP_LIST_ID }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_DIFF: ${{ env.diff }}
       - name: Push Quality Score
         run: node .github/scripts/push_quality_score.js
         env:
@@ -24,4 +51,6 @@ jobs:
           O2_PROP_LIST_ID: ${{ secrets.O2_PROP_LIST_ID }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PR_DIFF: ${{ env.diff }}
           QUALITY_SCORE: 77 # Placeholder, or set dynamically 
