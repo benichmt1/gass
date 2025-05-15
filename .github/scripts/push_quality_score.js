@@ -126,10 +126,7 @@ async function main() {
 
   // Access rows from the nested data structure
   const rows = rowsData.data.rows || [];
-  console.log("Parsed rows:", JSON.stringify(rows, null, 2));
-  console.log("Looking for github_username:", githubUsername);
   const existingUser = rows.find(row => row.github_username === githubUsername);
-  console.log("Found existing user:", existingUser);
   const operation = existingUser ? "update" : "create";
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
 
