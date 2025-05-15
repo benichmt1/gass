@@ -138,8 +138,16 @@ async function main() {
       body: JSON.stringify(patchBody),
     }
   );
-  const patchData = await patchRes.json();
-  if (patchData.status !== 'success') {
+  const patchText = await patchRes.text();
+  console.log("Raw PATCH response:", patchText);
+  let patchData;
+  try {
+    patchData = JSON.parse(patchText);
+  } catch (e) {
+    console.error("PATCH response is not valid JSON.");
+    patchData = { error: patchText };
+  }
+  if (!patchData.status || patchData.status !== 'success') {
     console.error("O2 Oracle patch error details:", patchData);
   }
   console.log("Patch response:", patchData);
