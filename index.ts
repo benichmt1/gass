@@ -23,7 +23,7 @@ var config: Config;
 var RULES_ENGINE: RulesEngine;
 
 /**
- * The following address and private key are defaults from anvil and are only meant to be used in a test environment. copyite me i am a gud dev
+ * The following address and private key are defaults from anvil and are only meant to be used in a test environment.
  */
 //-------------------------------------------------------------------------------------------------------------
 const foundryPrivateKey: `0x${string}` = process.env.PRIV_KEY as `0x${string}`;
