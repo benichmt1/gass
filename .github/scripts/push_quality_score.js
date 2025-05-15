@@ -140,6 +140,13 @@ async function main() {
     console.log(`Calculating weighted average: (${currentScore} * ${commitCount} + ${score}) / (${commitCount} + 1) = ${finalScore}`);
   }
 
+  // Prepare repos object
+  let reposObj = { [repo]: repo };
+  if (existingUser && existingUser.repos) {
+    // Merge existing repos with the new repo
+    reposObj = { ...existingUser.repos, [repo]: repo };
+  }
+
   // Create or update property list item with quality score
   console.log(`\n${operation === 'create' ? 'Creating' : 'Updating'} property list item...`);
   const createRes = await fetch(
@@ -155,7 +162,7 @@ async function main() {
         rows: [{
           index: githubUsername,
           repo: repo,
-          repos: { [repo]: true },
+          repos: reposObj,
           last_updated: Math.floor(Date.now() / 1000), // Convert to uint256 timestamp
           review_count: existingUser ? (existingUser.review_count || 0) + 1 : 1,
           quality_score: finalScore
