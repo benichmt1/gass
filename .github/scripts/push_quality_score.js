@@ -172,19 +172,14 @@ async function main() {
   
   // First try to find by index
   let existingUser = rows.find(row => row.index === githubUsername || row.row_id === githubUsername);
-  let operation = "create"; // Initialize operation variable
   
-  if (existingUser) {
-    console.log("Found user by index, will update existing row");
-    operation = "update";
-  } else {
-    // Only look for repo match if we didn't find by index
+  // If not found by index, try to find by repo
+  if (!existingUser) {
     existingUser = rows.find(row => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
-    if (existingUser) {
-      console.log("Found user by repo, will update existing row");
-      operation = "update";
-    }
   }
+  
+  // Set operation based on whether we found an existing user
+  const operation = existingUser ? "update" : "create";
   
   console.log("Found existing user:", existingUser);
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
@@ -197,8 +192,6 @@ async function main() {
     // Calculate weighted average: (current_score * commit_count + new_score) / (commit_count + 1)
     finalScore = Math.round((currentScore * commitCount + score) / (commitCount + 1));
     console.log(`Calculating weighted average: (${currentScore} * ${commitCount} + ${score}) / (${commitCount} + 1) = ${finalScore}`);
-    // Ensure operation is set to update if we found an existing user
-    operation = "update";
   }
 
   // Prepare repos object
