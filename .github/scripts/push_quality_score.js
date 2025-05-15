@@ -126,11 +126,13 @@ async function main() {
     operation,
     rows: {
       [githubUsername]: {
-        quality_score: finalScore,
-        review_count: reviewCount,
-        repos: repos,
-        last_updated: now,
-        repo: repo
+        properties: {
+          quality_score: finalScore,
+          review_count: reviewCount,
+          repos: repos,
+          last_updated: now,
+          repo: repo
+        }
       }
     }
   };
