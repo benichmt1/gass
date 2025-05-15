@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const email = process.env.O2_EMAIL;
 const password = process.env.O2_PASSWORD;
