@@ -98,9 +98,8 @@ async function main() {
   const propListData = await propListRes.json();
   console.log("Property list configuration:", JSON.stringify(propListData, null, 2));
 
-  // Try a simpler request first with just one property
-  const now = Math.floor(Date.now() / 1000); // Unix timestamp
-  const operation = "create";
+  // 2. Check if user already exists in property list
+  let operation = "create";
   let finalScore = score;
   let reviewCount = 1;
   let repos = [repo];
@@ -117,16 +116,16 @@ async function main() {
     );
     if (getRes.ok) {
       const getData = await getRes.json();
-      if (getData && getData.quality_score !== undefined && getData.review_count !== undefined && getData.repos !== undefined) {
+      if (getData && getData.properties && getData.properties.quality_score !== undefined) {
         // User exists, calculate running average and update repos
-        reviewCount = parseInt(getData.review_count) + 1;
-        finalScore = Math.round((parseInt(getData.quality_score) * parseInt(getData.review_count) + score) / reviewCount);
-        repos = Array.isArray(getData.repos) ? getData.repos.slice() : [];
+        reviewCount = parseInt(getData.properties.review_count) + 1;
+        finalScore = Math.round((parseInt(getData.properties.quality_score) * parseInt(getData.properties.review_count) + score) / reviewCount);
+        repos = getData.properties.repos ? Object.values(getData.properties.repos) : [];
         if (!repos.includes(repo)) {
           repos.push(repo);
         }
         operation = "update";
-        console.log(`User exists. Running average: old=${getData.quality_score}, count=${getData.review_count}, new=${score}, avg=${finalScore}, repos=${repos}`);
+        console.log(`User exists. Running average: old=${getData.properties.quality_score}, count=${getData.properties.review_count}, new=${score}, avg=${finalScore}, repos=${repos}`);
       }
     } else if (getRes.status === 404) {
       // User does not exist, will create
@@ -142,9 +141,16 @@ async function main() {
     console.warn("Could not check for existing user row (proceeding with create):", err);
   }
 
+  // Convert repos array to string[string] format
+  const reposObject = {};
+  repos.forEach((repo, index) => {
+    reposObject[index.toString()] = repo;
+  });
+
   // 3. Push the quality score and metadata
-  const testPatchBody = {
-    operation: "create",
+  const now = Math.floor(Date.now() / 1000); // Unix timestamp
+  const patchBody = {
+    operation,
     rows: {
       [githubUsername]: {
         properties: {
@@ -152,16 +158,14 @@ async function main() {
           review_count: reviewCount,
           last_updated: now,
           repo: repo,
-          repos: {
-            "0": repo  // Convert array to string[string] format
-          }
+          repos: reposObject
         }
       }
     }
   };
 
-  console.log("Testing with schema-compliant PATCH body:", JSON.stringify(testPatchBody, null, 2));
-  const testPatchRes = await fetch(
+  console.log("PATCH body:", JSON.stringify(patchBody, null, 2));
+  const patchRes = await fetch(
     `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
     {
       method: "PATCH",
@@ -169,84 +173,48 @@ async function main() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(testPatchBody),
+      body: JSON.stringify(patchBody),
     }
   );
 
-  console.log("Test PATCH response status:", testPatchRes.status);
-  const testPatchText = await testPatchRes.text();
-  console.log("Test PATCH response:", testPatchText);
-
-  // If test succeeds, proceed with full update
-  if (testPatchRes.ok) {
-    const patchBody = {
-      operation,
-      rows: {
-        [githubUsername]: {
-          properties: {
-            quality_score: finalScore,
-            review_count: reviewCount,
-            last_updated: now,
-            repo: repo,
-            repos: {
-              "0": repo  // Convert array to string[string] format
-            }
-          }
-        }
-      }
-    };
-    console.log("PATCH body:", JSON.stringify(patchBody, null, 2));
-    const patchRes = await fetch(
-      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(patchBody),
-      }
-    );
-    
-    // Add detailed error logging
-    console.log("PATCH response status:", patchRes.status);
-    console.log("PATCH response headers:", JSON.stringify(Object.fromEntries(patchRes.headers.entries()), null, 2));
-    
-    const patchText = await patchRes.text();
-    console.log("Raw PATCH response:", patchText);
-    let patchData;
-    try {
-      patchData = JSON.parse(patchText);
-    } catch (e) {
-      console.error("PATCH response is not valid JSON.");
-      patchData = { error: patchText };
-    }
-    
-    if (!patchRes.ok) {
-      console.error("PATCH request failed with status:", patchRes.status);
-      console.error("Full error response:", patchData);
-      throw new Error(`PATCH request failed: ${patchRes.status} ${patchRes.statusText}`);
-    }
-    
-    if (!patchData.status || patchData.status !== 'success') {
-      console.error("O2 Oracle patch error details:", patchData);
-    }
-    console.log("Patch response:", patchData);
-
-    // 4. Publish the changes
-    const publishRes = await fetch(
-      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/publish`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    const publishData = await publishRes.json();
-    console.log("Publish response:", publishData);
+  // Add detailed error logging
+  console.log("PATCH response status:", patchRes.status);
+  console.log("PATCH response headers:", JSON.stringify(Object.fromEntries(patchRes.headers.entries()), null, 2));
+  
+  const patchText = await patchRes.text();
+  console.log("Raw PATCH response:", patchText);
+  let patchData;
+  try {
+    patchData = JSON.parse(patchText);
+  } catch (e) {
+    console.error("PATCH response is not valid JSON.");
+    patchData = { error: patchText };
   }
+  
+  if (!patchRes.ok) {
+    console.error("PATCH request failed with status:", patchRes.status);
+    console.error("Full error response:", patchData);
+    throw new Error(`PATCH request failed: ${patchRes.status} ${patchRes.statusText}`);
+  }
+  
+  if (!patchData.status || patchData.status !== 'success') {
+    console.error("O2 Oracle patch error details:", patchData);
+  }
+  console.log("Patch response:", patchData);
+
+  // 4. Publish the changes
+  const publishRes = await fetch(
+    `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/publish`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const publishData = await publishRes.json();
+  console.log("Publish response:", publishData);
 }
 
 main().catch(console.error); 
