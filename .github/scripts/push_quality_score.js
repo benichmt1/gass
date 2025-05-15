@@ -172,6 +172,7 @@ async function main() {
   
   // First try to find by index
   let existingUser = rows.find(row => row.index === githubUsername);
+  let operation = "create"; // Initialize operation variable
   
   // If not found by index, try to find by repo (for migration)
   if (!existingUser) {
@@ -203,10 +204,11 @@ async function main() {
       // Set operation to create since we're making a new row with the correct index
       operation = "create";
     }
+  } else {
+    operation = "update";
   }
   
   console.log("Found existing user:", existingUser);
-  const operation = existingUser ? "update" : "create";
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
 
   // Calculate the new score
