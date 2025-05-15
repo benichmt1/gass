@@ -99,7 +99,6 @@ async function main() {
         // User exists, calculate running average and update repos
         reviewCount = parseInt(getData.review_count) + 1;
         finalScore = Math.round((parseInt(getData.quality_score) * parseInt(getData.review_count) + score) / reviewCount);
-        // Merge repos, ensuring uniqueness
         repos = Array.isArray(getData.repos) ? getData.repos.slice() : [];
         if (!repos.includes(repo)) {
           repos.push(repo);
@@ -107,6 +106,15 @@ async function main() {
         operation = "update";
         console.log(`User exists. Running average: old=${getData.quality_score}, count=${getData.review_count}, new=${score}, avg=${finalScore}, repos=${repos}`);
       }
+    } else if (getRes.status === 404) {
+      // User does not exist, will create
+      operation = "create";
+      finalScore = score;
+      reviewCount = 1;
+      repos = [repo];
+      console.log("User does not exist, will create new row.");
+    } else {
+      console.warn("Unexpected GET response status:", getRes.status);
     }
   } catch (err) {
     console.warn("Could not check for existing user row (proceeding with create):", err);
@@ -115,7 +123,7 @@ async function main() {
   // 3. Push the quality score and metadata
   const now = Math.floor(Date.now() / 1000); // Unix timestamp
   const patchBody = {
-    operation: "update",
+    operation,
     rows: {
       [githubUsername]: {
         quality_score: finalScore,
