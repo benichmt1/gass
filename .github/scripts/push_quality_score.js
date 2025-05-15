@@ -120,8 +120,19 @@ async function main() {
   console.log("Current rows:", JSON.stringify(rowsData, null, 2));
 
   // Check if item exists for this GitHub username
-  const operation = rowsData[githubUsername] ? "update" : "create";
+  const existingUser = rowsData[githubUsername];
+  const operation = existingUser ? "update" : "create";
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
+
+  // Calculate the new score
+  let finalScore = score;
+  if (existingUser) {
+    const currentScore = existingUser.quality_score || 0;
+    const commitCount = existingUser.commit_count || 0;
+    // Calculate weighted average: (current_score * commit_count + new_score) / (commit_count + 1)
+    finalScore = Math.round((currentScore * commitCount + score) / (commitCount + 1));
+    console.log(`Calculating weighted average: (${currentScore} * ${commitCount} + ${score}) / (${commitCount} + 1) = ${finalScore}`);
+  }
 
   // Create or update property list item with quality score
   console.log(`\n${operation === 'create' ? 'Creating' : 'Updating'} property list item...`);
@@ -137,7 +148,8 @@ async function main() {
         operation: operation,
         rows: {
           [githubUsername]: {
-            quality_score: score,
+            quality_score: finalScore,
+            commit_count: existingUser ? (existingUser.commit_count || 0) + 1 : 1,
             repository: repo,
             timestamp: new Date().toISOString()
           }
