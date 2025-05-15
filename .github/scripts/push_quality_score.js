@@ -197,6 +197,8 @@ async function main() {
     // Calculate weighted average: (current_score * commit_count + new_score) / (commit_count + 1)
     finalScore = Math.round((currentScore * commitCount + score) / (commitCount + 1));
     console.log(`Calculating weighted average: (${currentScore} * ${commitCount} + ${score}) / (${commitCount} + 1) = ${finalScore}`);
+    // Ensure operation is set to update if we found an existing user
+    operation = "update";
   }
 
   // Prepare repos object
