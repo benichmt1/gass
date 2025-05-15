@@ -1,3 +1,4 @@
+const fs = require('fs');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 // This is a test change to verify the code review functionality
@@ -8,7 +9,7 @@ const password = process.env.O2_PASSWORD;
 const appId = process.env.O2_APP_ID;
 const propListId = process.env.O2_PROP_LIST_ID;
 const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-const prDiff = process.env.PR_DIFF;
+const prDiff = fs.existsSync('pr_diff.txt') ? fs.readFileSync('pr_diff.txt', 'utf8') : '';
 
 const githubUsername = process.env.GITHUB_ACTOR || "unknown";
 const repo = process.env.GITHUB_REPOSITORY || "unknown-repo";
