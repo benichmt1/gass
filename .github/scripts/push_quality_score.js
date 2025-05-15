@@ -171,19 +171,19 @@ async function main() {
   console.log("Looking for github_username:", githubUsername);
   
   // First try to find by index
-  let existingUser = rows.find(row => row.index === githubUsername);
+  let existingUser = rows.find(row => row.index === githubUsername || row.row_id === githubUsername);
   let operation = "create"; // Initialize operation variable
   
-  // If not found by index, try to find by repo (for migration)
-  if (!existingUser) {
+  if (existingUser) {
+    console.log("Found user by index, will update existing row");
+    operation = "update";
+  } else {
+    // Only look for repo match if we didn't find by index
     existingUser = rows.find(row => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
     if (existingUser) {
       console.log("Found user by repo, will update existing row");
       operation = "update";
     }
-  } else {
-    console.log("Found user by index, will update existing row");
-    operation = "update";
   }
   
   console.log("Found existing user:", existingUser);
