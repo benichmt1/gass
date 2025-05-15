@@ -169,7 +169,42 @@ async function main() {
   const rows = rowsData.data.rows || [];
   console.log("Parsed rows:", JSON.stringify(rows, null, 2));
   console.log("Looking for github_username:", githubUsername);
-  const existingUser = rows.find(row => row.index === githubUsername);
+  
+  // First try to find by index
+  let existingUser = rows.find(row => row.index === githubUsername);
+  
+  // If not found by index, try to find by repo (for migration)
+  if (!existingUser) {
+    existingUser = rows.find(row => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
+    if (existingUser) {
+      console.log("Found user by repo, will migrate to use index");
+      // Delete the old row with row_id
+      const deleteRes = await fetch(
+        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            operation: "delete",
+            rows: [{
+              index: existingUser.row_id
+            }]
+          })
+        }
+      );
+      
+      if (!deleteRes.ok) {
+        console.error("Failed to delete old row:", await deleteRes.text());
+      }
+      
+      // Set operation to create since we're making a new row with the correct index
+      operation = "create";
+    }
+  }
+  
   console.log("Found existing user:", existingUser);
   const operation = existingUser ? "update" : "create";
   console.log(`\nItem ${operation === 'create' ? 'does not exist' : 'exists'}, will ${operation}`);
