@@ -20,7 +20,48 @@ if (!email || !password || !appId || !propListId || !openRouterApiKey) {
 }
 
 async function getCodeReviewScore(diff) {
-  const prompt = `Please review this code diff and provide a quality score from 0-100. Consider:\n1. Code quality and readability\n2. Best practices and patterns\n3. Potential bugs or issues\n4. Documentation and comments\n5. Test coverage (if applicable)\n\nHere's the diff:\n${diff}\n\nProvide your response in this exact format:\nScore: [number between 0-100]\nReasoning: [brief explanation]`;
+  const prompt = `Please perform a rigorous and critical code review of this diff. Be thorough and strict in your evaluation. Consider:
+
+1. Code Quality & Readability:
+   - Is the code clean, well-structured, and easy to understand?
+   - Are there any unnecessary complexities or redundancies?
+   - Is the code following best practices and design patterns?
+
+2. Potential Issues & Bugs:
+   - Are there any obvious bugs or edge cases not handled?
+   - Are there security vulnerabilities or performance concerns?
+   - Is error handling comprehensive and appropriate?
+
+3. Documentation & Comments:
+   - Is the code well-documented with clear comments?
+   - Are complex logic sections explained?
+   - Is there sufficient inline documentation?
+
+4. Testing & Maintainability:
+   - Is the code testable and maintainable?
+   - Are there any hardcoded values or magic numbers?
+   - Is the code modular and reusable?
+
+5. Best Practices:
+   - Does it follow language/framework conventions?
+   - Are there any anti-patterns or code smells?
+   - Is the code DRY (Don't Repeat Yourself)?
+
+Be particularly critical of:
+- Poor error handling
+- Lack of documentation
+- Code duplication
+- Unclear or complex logic
+- Security vulnerabilities
+- Performance issues
+- Inconsistent coding style
+
+Here's the diff:
+${diff}
+
+Provide your response in this exact format:
+Score: [number between 0-100]
+Reasoning: [detailed explanation of issues found and why the score was given]`;
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
