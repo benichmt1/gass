@@ -230,6 +230,21 @@ async function main() {
 
   // Create or update property list item with quality score
   console.log(`\n${operation === 'create' ? 'Creating' : 'Updating'} property list item...`);
+  const requestBody = {
+    operation: operation,
+    rows: [{
+      index: githubUsername,
+      data: {
+        repo: repo,
+        repos: reposObj,
+        last_updated: Math.floor(Date.now() / 1000),
+        review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
+        quality_score: finalScore
+      }
+    }]
+  };
+  console.log("Request body:", JSON.stringify(requestBody, null, 2));
+
   const createRes = await fetch(
     `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
     {
@@ -238,23 +253,14 @@ async function main() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        operation: operation,
-        rows: [{
-          index: githubUsername,
-          repo: repo,
-          repos: reposObj,
-          last_updated: Math.floor(Date.now() / 1000), // Convert to uint256 timestamp
-          review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
-          quality_score: finalScore
-        }]
-      })
+      body: JSON.stringify(requestBody)
     }
   );
 
   if (!createRes.ok) {
     const errorData = await createRes.json();
     console.error("Failed to create/update property list item:", errorData);
+    console.error("Request body:", JSON.stringify(requestBody, null, 2));
     throw new Error("Failed to create/update property list item: " + (errorData.message || 'Unknown error'));
   }
 
@@ -275,8 +281,9 @@ async function main() {
   );
 
   if (!publishRes.ok) {
-    console.error("Failed to publish changes:", await publishRes.text());
-    throw new Error("Failed to publish changes");
+    const errorText = await publishRes.text();
+    console.error("Failed to publish changes:", errorText);
+    throw new Error("Failed to publish changes: " + errorText);
   }
 
   const publishData = await publishRes.json();
