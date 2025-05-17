@@ -1,0 +1,60 @@
+{
+  "Policy": "GASS Token Distribution Policy",
+  "ForeignCalls": [
+    {
+      "name": "getQualityScore",
+      "address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "signature": "getQuality_score(string)",
+      "returnType": "uint256",
+      "parameterTypes": "string",
+      "encodedIndices": "2"
+    },
+    {
+      "name": "getLastUpdated",
+      "address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "signature": "getLast_updated(string)",
+      "returnType": "uint256",
+      "parameterTypes": "string",
+      "encodedIndices": "2"
+    },
+    {
+      "name": "getReviewCount",
+      "address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "signature": "getReview_count(string)",
+      "returnType": "uint256",
+      "parameterTypes": "string",
+      "encodedIndices": "2"
+    }
+  ],
+  "Trackers": [],
+  "RulesJSON": [
+    {
+      "condition": "FC:getQualityScore(githubUsername) <= 50",
+      "positiveEffects": ["revert(\"Quality score too low\")"],
+      "negativeEffects": [],
+      "functionSignature": "processReward(address to, uint256 amount, string githubUsername)",
+      "encodedValues": "address to, uint256 amount, string githubUsername"
+    },
+    {
+      "condition": "(FC:getQualityScore(githubUsername) > 50) && (FC:getLastUpdated(githubUsername) < 1750000000)",
+      "positiveEffects": ["emit LimitedDistribution(to, amount / 2, githubUsername, FC:getLastUpdated(githubUsername))"],
+      "negativeEffects": [],
+      "functionSignature": "processReward(address to, uint256 amount, string githubUsername)",
+      "encodedValues": "address to, uint256 amount, string githubUsername"
+    },
+    {
+      "condition": "(FC:getQualityScore(githubUsername) > 50) && (FC:getLastUpdated(githubUsername) >= 1750000000) && (FC:getReviewCount(githubUsername) > 100)",
+      "positiveEffects": ["emit BonusDistribution(to, amount * 2, githubUsername)"],
+      "negativeEffects": [],
+      "functionSignature": "processReward(address to, uint256 amount, string githubUsername)",
+      "encodedValues": "address to, uint256 amount, string githubUsername"
+    },
+    {
+      "condition": "FC:getQualityScore(githubUsername) > 50 AND (FC:getLastUpdated(githubUsername) >= 1750000000 AND FC:getReviewCount(githubUsername) <= 100)",
+      "positiveEffects": ["emit StandardDistribution(to, amount, githubUsername)"],
+      "negativeEffects": [],
+      "functionSignature": "processReward(address to, uint256 amount, string githubUsername)",
+      "encodedValues": "address to, uint256 amount, string githubUsername"
+    }
+  ]
+}

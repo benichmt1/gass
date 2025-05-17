@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <path d="M30.5 10C19.2 10 10 19.2 10 30.5C10 41.8 19.2 51 30.5 51C41.8 51 51 41.8 51 30.5C51 19.2 41.8 10 30.5 10ZM30.5 46C22 46 15 39 15 30.5C15 22 22 15 30.5 15C39 15 46 22 46 30.5C46 39 39 46 30.5 46Z" fill="url(#gradient)" filter="url(#glow)"/>
+  <path d="M30.5 20C24.7 20 20 24.7 20 30.5C20 36.3 24.7 41 30.5 41C36.3 41 41 36.3 41 30.5C41 24.7 36.3 20 30.5 20ZM30.5 36C27.5 36 25 33.5 25 30.5C25 27.5 27.5 25 30.5 25C33.5 25 36 27.5 36 30.5C36 33.5 33.5 36 30.5 36Z" fill="url(#gradient)" filter="url(#glow)"/>
+  <path d="M65 20H75C80.5 20 85 24.5 85 30C85 35.5 80.5 40 75 40H65V20ZM75 35C77.8 35 80 32.8 80 30C80 27.2 77.8 25 75 25H70V35H75Z" fill="url(#gradient)" filter="url(#glow)"/>
+  <path d="M90 20H110V25H95V27.5H107.5V32.5H95V35H110V40H90V20Z" fill="url(#gradient)" filter="url(#glow)"/>
+  <path d="M115 20H135V25H120V27.5H132.5V32.5H120V35H135V40H115V20Z" fill="url(#gradient)" filter="url(#glow)"/>
+  <path d="M140 20H160C165.5 20 170 24.5 170 30C170 35.5 165.5 40 160 40H140V20ZM160 35C162.8 35 165 32.8 165 30C165 27.2 162.8 25 160 25H145V35H160Z" fill="url(#gradient)" filter="url(#glow)"/>
+</svg>
