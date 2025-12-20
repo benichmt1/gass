@@ -12,9 +12,9 @@ interface TogglesContextType {
 
 const TogglesContext = createContext<TogglesContextType>({
   debugMode: false,
-  setDebugMode: () => {},
+  setDebugMode: () => { },
   simulationMode: false,
-  setSimulationMode: () => {},
+  setSimulationMode: () => { },
 });
 
 // Provider component for toggles
@@ -89,16 +89,32 @@ export default function HeaderToggles() {
   return (
     <div className="gass-toggles">
       <button
-        className={`gass-button ${debugMode ? 'gass-button-primary' : 'gass-button-outline'}`}
+        className={`gass-button gass-button-outline ${debugMode ? 'active' : ''}`}
         onClick={toggleDebugMode}
+        title={debugMode ? 'Debug Mode ON' : 'Debug Mode OFF'}
+        style={{
+          fontSize: '0.75rem',
+          padding: '0.5rem 0.75rem',
+          opacity: debugMode ? 1 : 0.6,
+          background: debugMode ? 'rgba(10, 132, 255, 0.12)' : 'transparent',
+          borderColor: debugMode ? 'rgba(10, 132, 255, 0.25)' : undefined,
+        }}
       >
-        Debug Mode {debugMode ? 'ON' : 'OFF'}
+        🔧 {debugMode ? 'Debug' : 'Debug'}
       </button>
       <button
-        className={`gass-button ${simulationMode ? 'gass-button-primary' : 'gass-button-outline'}`}
+        className={`gass-button gass-button-outline ${simulationMode ? 'active' : ''}`}
         onClick={toggleSimulationMode}
+        title={simulationMode ? 'Simulation Mode ON' : 'Simulation Mode OFF'}
+        style={{
+          fontSize: '0.75rem',
+          padding: '0.5rem 0.75rem',
+          opacity: simulationMode ? 1 : 0.6,
+          background: simulationMode ? 'rgba(255, 149, 0, 0.15)' : 'transparent',
+          borderColor: simulationMode ? 'rgba(255, 149, 0, 0.3)' : undefined,
+        }}
       >
-        Simulation Mode {simulationMode ? 'ON' : 'OFF'}
+        🧪 {simulationMode ? 'Sim' : 'Sim'}
       </button>
     </div>
   );
