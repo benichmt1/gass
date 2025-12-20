@@ -12,31 +12,31 @@ const GASS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_GASS_CONTRACT_ADDRESS || '
 const GASS_ABI = [
   {
     "inputs": [
-      {"internalType": "string", "name": "githubUsername", "type": "string"}
+      { "internalType": "string", "name": "githubUsername", "type": "string" }
     ],
     "name": "checkEligibility",
     "outputs": [
-      {"internalType": "string", "name": "tier", "type": "string"},
-      {"internalType": "uint256", "name": "amount", "type": "uint256"}
+      { "internalType": "string", "name": "tier", "type": "string" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {"internalType": "string", "name": "githubUsername", "type": "string"}
+      { "internalType": "string", "name": "githubUsername", "type": "string" }
     ],
     "name": "claimReward",
-    "outputs": [{"internalType": "bool", "name": "success", "type": "bool"}],
+    "outputs": [{ "internalType": "bool", "name": "success", "type": "bool" }],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      {"internalType": "string", "name": "githubUsername", "type": "string"}
+      { "internalType": "string", "name": "githubUsername", "type": "string" }
     ],
     "name": "hasClaimedReward",
-    "outputs": [{"internalType": "bool", "name": "claimed", "type": "bool"}],
+    "outputs": [{ "internalType": "bool", "name": "claimed", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   }
@@ -51,7 +51,7 @@ export default function ContractInteraction() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [eligibilityInfo, setEligibilityInfo] = useState<{tier: string, amount: bigint} | null>(null);
+  const [eligibilityInfo, setEligibilityInfo] = useState<{ tier: string, amount: bigint } | null>(null);
   const [hasAlreadyClaimed, setHasAlreadyClaimed] = useState<boolean | null>(null);
   const [githubUsername, setGithubUsername] = useState<string>('');
 
@@ -163,7 +163,7 @@ export default function ContractInteraction() {
       setEligibilityInfo({ tier, amount });
 
       // Format the amount to ETH (assuming 18 decimals)
-      const formattedAmount = Number(amount) / 10**18;
+      const formattedAmount = Number(amount) / 10 ** 18;
 
       setResult(`GitHub user "${username}" is eligible for the "${tier}" tier with ${formattedAmount} tokens.
 ${claimed ? '⚠️ You have already claimed your reward.' : '✅ Your reward is available to claim!'}`);
@@ -293,7 +293,7 @@ View on BaseScan: https://sepolia.basescan.org/tx/${hash}`);
           </div>
           <div className="gass-info-item">
             <span className="gass-info-label">Reward Amount:</span>
-            <span className="gass-info-value">{Number(eligibilityInfo.amount) / 10**18} tokens</span>
+            <span className="gass-info-value">{Number(eligibilityInfo.amount) / 10 ** 18} tokens</span>
           </div>
           <div className="gass-info-item">
             <span className="gass-info-label">Claim Status:</span>
@@ -321,18 +321,18 @@ View on BaseScan: https://sepolia.basescan.org/tx/${hash}`);
       )}
 
       {debugMode && (
-        <div className="gass-debug-info">
-          <h4>Contract Details:</h4>
-          <pre>
+        <details className="mt-8 p-4 rounded-xl bg-black/20 border border-white/10">
+          <summary className="cursor-pointer font-medium opacity-70 hover:opacity-100 text-xs uppercase">Contract Details</summary>
+          <pre className="text-xs overflow-x-auto p-4 mt-2 rounded bg-black/40 text-blue-400 font-mono">
             {`Contract Address: ${GASS_CONTRACT_ADDRESS}
 Network: Base Sepolia
 Connected Wallet: ${primaryWallet?.address || 'None'}
 GitHub Username: ${userGithubUsername || githubUsername || 'None'}
 Has Claimed: ${hasAlreadyClaimed !== null ? hasAlreadyClaimed.toString() : 'Unknown'}
 Eligible Tier: ${eligibilityInfo?.tier || 'Unknown'}
-Reward Amount: ${eligibilityInfo ? (Number(eligibilityInfo.amount) / 10**18).toString() : 'Unknown'} tokens`}
+Reward Amount: ${eligibilityInfo ? (Number(eligibilityInfo.amount) / 10 ** 18).toString() : 'Unknown'} tokens`}
           </pre>
-        </div>
+        </details>
       )}
     </div>
   );

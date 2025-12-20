@@ -20,26 +20,19 @@ export default function Main() {
 
   return (
     <div className="gass-container">
-      <div className="gass-header">
-        <div className="gass-logo">
-          <div className="consensus-badge">Consensus Toronto 2025</div>
-          <div className="gass-title">
-            <div>Github</div>
-            <div>Activity</div>
-            <div>Scoring</div>
-            <div>System</div>
-            <div className="creator-name">Michael Be</div>
-          </div>
+      {/* Top Navigation Bar */}
+      <nav className="gass-navbar">
+        <div className="gass-navbar-brand">
+          <span className="gass-navbar-logo">GASS</span>
+          <span className="gass-navbar-badge">Consensus Toronto 2025</span>
         </div>
-        <div className="gass-header-buttons">
+        <div className="gass-navbar-controls">
           <ClientOnly>
-            <div className="gass-header-controls">
-              <ThemeToggle />
-              <HeaderToggles />
-            </div>
+            <ThemeToggle />
+            <HeaderToggles />
           </ClientOnly>
         </div>
-      </div>
+      </nav>
       <div className="gass-card">
         <h2>GitHub Activity Scoring System</h2>
         <p>Connect your GitHub account to check your rewards eligibility based on your contribution activity</p>

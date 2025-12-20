@@ -19,18 +19,18 @@ export default function Providers({
       <DynamicContextProvider
         theme="auto"
         settings={{
-          environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENV_ID || "83b7454d-83ea-4b76-8532-2b4e3dd6f1a4",
+          environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENV_ID || "29ed16d2-1bac-4503-bfe0-1dbdc206af0a",
           walletConnectors: [
             EthereumWalletConnectors,
             // ZeroDevSmartWalletConnectors, // Commented out for MetaMask focus
           ],
           socialProvidersFilter: (providers) => ['github'],
-          
+
           embeddedWallets: {
-            enabled: true, 
+            enabled: true,
             walletConnectEnabled: true,
             createOnLogin: true,
-            network: { 
+            network: {
               chainId: 84532,
               name: "BaseSepolia",
               displayName: "Base Sepolia",
@@ -41,11 +41,11 @@ export default function Providers({
                 symbol: "ETH",
                 decimals: 18,
               },
-              isTestnet: true, 
+              isTestnet: true,
             },
           },
           defaultEvmNetwork: "84532",
-          
+
           // smartWalletOptions: { // Commented out for MetaMask focus
           //   enabled: true,
           //   provider: 'zerodev',
@@ -94,8 +94,8 @@ export default function Providers({
           overrides: {
             evmNetworks: [
               {
-                chainId: 84532, 
-                networkId: 84532, 
+                chainId: 84532,
+                networkId: 84532,
                 name: "BaseSepolia",
                 chainName: "Base Sepolia",
                 vanityName: "Base Sepolia",
@@ -107,7 +107,7 @@ export default function Providers({
                   symbol: "ETH",
                   decimals: 18,
                 },
-                isTestnet: true, 
+                isTestnet: true,
               }
             ]
           }

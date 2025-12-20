@@ -15,8 +15,8 @@ export default function SmartWalletInfo() {
   useEffect(() => {
     // Check if we're in a browser environment with storage access
     const hasStorageAccess = typeof window !== 'undefined' &&
-                            typeof localStorage !== 'undefined' &&
-                            typeof sessionStorage !== 'undefined';
+      typeof localStorage !== 'undefined' &&
+      typeof sessionStorage !== 'undefined';
 
     if (!hasStorageAccess) {
       console.warn('Storage access is not available. Wallet info may not be displayed properly.');
@@ -71,14 +71,11 @@ export default function SmartWalletInfo() {
     <div className="gass-smart-wallet-info">
       <h3>Wallet Information</h3>
 
-      {/* GitHub Authentication Status */}
-      <div className={`gass-status ${isGitHubAuthenticated ? 'gass-status-success' : 'gass-status-warning'}`}>
-        <span className="gass-status-icon">{isGitHubAuthenticated ? '✅' : 'ℹ️'}</span>
-        <span>
-          {isGitHubAuthenticated
-            ? 'GitHub Authentication: Connected'
-            : 'GitHub Authentication: Not connected. Connect with GitHub to verify your identity.'}
-        </span>
+      {/* GitHub Authentication Status - Small inline badge */}
+      <div className="flex items-center gap-2 mb-6">
+        <div className={`text-sm px-3 py-1 rounded-full border ${isGitHubAuthenticated ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500'}`}>
+          {isGitHubAuthenticated ? 'GitHub Connected' : 'GitHub Not Connected'}
+        </div>
       </div>
 
       {/* Network Status - Using the new NetworkSwitcher component */}
@@ -88,35 +85,36 @@ export default function SmartWalletInfo() {
       <EmbeddedWalletManager />
 
       {/* Wallet Info */}
-      <div className="gass-info-item">
-        <span className="gass-info-label">Wallet Address:</span>
-        <span className="gass-info-value">
-          {`${primaryWallet.address.substring(0, 6)}...${primaryWallet.address.substring(primaryWallet.address.length - 4)}`}
-        </span>
-      </div>
+      <div className="gass-info-grid mt-4">
+        <div className="gass-info-item">
+          <span className="gass-info-label">Wallet Address</span>
+          <span className="gass-info-value font-mono text-sm">
+            {`${primaryWallet.address.substring(0, 6)}...${primaryWallet.address.substring(primaryWallet.address.length - 4)}`}
+          </span>
+        </div>
 
-      <div className="gass-info-item">
-        <span className="gass-info-label">Wallet Type:</span>
-        <span className="gass-info-value">{primaryWallet.connector.name}</span>
+        <div className="gass-info-item">
+          <span className="gass-info-label">Wallet Type</span>
+          <span className="gass-info-value">{primaryWallet.connector.name}</span>
+        </div>
       </div>
 
       {error && (
-        <div className="gass-status gass-status-error">
-          <span className="gass-status-icon">❌</span>
-          <span>{error}</span>
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+          {error}
         </div>
       )}
 
       {debugMode && (
-        <div className="gass-debug-info">
-          <h4>Wallet Debug Info:</h4>
-          <pre>
+        <details className="mt-6 p-4 rounded-xl bg-black/20 border border-white/10">
+          <summary className="cursor-pointer font-medium opacity-70 hover:opacity-100 text-xs uppercase">Wallet Debug Info</summary>
+          <pre className="text-xs overflow-x-auto p-4 mt-2 rounded bg-black/40 text-blue-400 font-mono">
             {`Wallet Address: ${primaryWallet.address}
 Wallet Type: ${primaryWallet.connector.name}
 Network Info: ${networkInfo || 'Unknown'}
 GitHub Authentication: ${isGitHubAuthenticated ? 'Yes' : 'No'}`}
           </pre>
-        </div>
+        </details>
       )}
     </div>
   );

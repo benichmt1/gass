@@ -69,24 +69,33 @@ export default function GithubUserInfo({ isDarkMode }: GithubUserInfoProps) {
     console.log('Primary wallet:', primaryWallet);
     if (primaryWallet) {
       console.log('Primary Wallet ID on login/update:', primaryWallet.id);
-      // A safer way to stringify, especially for complex objects with potential circular refs
-      try {
-        console.log('Primary Wallet Object on login/update:', JSON.stringify(primaryWallet, (key, value) => {
-          if (value instanceof Error) {
-            return { message: value.message, stack: value.stack };
-          }
-          // Add more custom handling if needed for other complex types
-          return value;
-        }, 2));
-      } catch (e) {
-        console.error('Error stringifying primaryWallet:', e, primaryWallet);
-      }
+      // Log only safe properties to avoid circular reference errors
+      console.log('Primary Wallet Info:', {
+        id: primaryWallet.id,
+        address: primaryWallet.address,
+        chain: primaryWallet.chain,
+        connector: primaryWallet.connector?.name,
+      });
     }
 
     // Find GitHub credential
     const githubCred = user?.verifiedCredentials?.find(
       (credential) => credential.format === 'oauth' && credential.oauthProvider === 'github'
     );
+
+    // Log verifiedCredentials structure for debugging SDK v4 changes
+    if (user?.verifiedCredentials) {
+      console.log('Verified Credentials:', user.verifiedCredentials.map(c => ({
+        format: c.format,
+        oauthProvider: c.oauthProvider,
+        oauthUsername: c.oauthUsername,
+        // Also check for alternate field names that may have changed in SDK v4
+        username: (c as any).username,
+        socialAccountId: (c as any).socialAccountId,
+        id: c.id,
+      })));
+    }
+    console.log('GitHub credential found:', githubCred);
 
     // For debugging purposes, let's automatically set verification result when user is authenticated
     if (user && user.verifiedCredentials && user.verifiedCredentials.length > 0) {
