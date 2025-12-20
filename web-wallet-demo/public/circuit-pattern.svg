@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="800px" viewBox="0 0 800 800" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Circuit Pattern</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#a855f7" stop-opacity="0.05" offset="0%"></stop>
+            <stop stop-color="#ec4899" stop-opacity="0.05" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Circuit-Pattern" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="url(#linearGradient-1)" x="0" y="0" width="800" height="800"></rect>
+        <g id="Lines" transform="translate(0.000000, 0.000000)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="1.5">
+            <path d="M100,100 L200,100 L200,200 L300,200 L300,300 L400,300 L400,400" stroke="#a855f7"></path>
+            <path d="M500,100 L600,100 L600,200 L700,200 L700,300" stroke="#ec4899"></path>
+            <path d="M100,300 L200,300 L200,400 L300,400 L300,500" stroke="#a855f7"></path>
+            <path d="M500,300 L600,300 L600,400 L700,400 L700,500" stroke="#ec4899"></path>
+            <path d="M100,500 L200,500 L200,600 L300,600 L300,700" stroke="#a855f7"></path>
+            <path d="M500,500 L600,500 L600,600 L700,600 L700,700" stroke="#ec4899"></path>
+            <path d="M100,700 L200,700" stroke="#a855f7"></path>
+            <path d="M300,700 L400,700 L400,600 L500,600 L500,700 L600,700" stroke="#ec4899"></path>
+            
+            <!-- Circles at intersections -->
+            <circle cx="100" cy="100" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="200" cy="100" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="200" cy="200" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="300" cy="200" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="300" cy="300" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="400" cy="300" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="400" cy="400" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            
+            <circle cx="500" cy="100" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="600" cy="100" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="600" cy="200" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="700" cy="200" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="700" cy="300" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            
+            <circle cx="100" cy="300" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="200" cy="300" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="200" cy="400" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="300" cy="400" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="300" cy="500" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            
+            <circle cx="500" cy="300" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="600" cy="300" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="600" cy="400" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="700" cy="400" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="700" cy="500" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            
+            <circle cx="100" cy="500" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="200" cy="500" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="200" cy="600" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="300" cy="600" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="300" cy="700" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            
+            <circle cx="500" cy="500" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="600" cy="500" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="600" cy="600" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="700" cy="600" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="700" cy="700" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            
+            <circle cx="100" cy="700" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            <circle cx="200" cy="700" r="4" stroke="#a855f7" fill="#a855f7" fill-opacity="0.1"></circle>
+            
+            <circle cx="300" cy="700" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="400" cy="700" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="400" cy="600" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="500" cy="600" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="500" cy="700" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+            <circle cx="600" cy="700" r="4" stroke="#ec4899" fill="#ec4899" fill-opacity="0.1"></circle>
+        </g>
+    </g>
+</svg>
