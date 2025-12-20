@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <title>GitHub Activity Scoring System</title>
         <meta name="description" content="GASS - GitHub Activity Scoring System by MichaelBe" />
