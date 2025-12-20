@@ -66,13 +66,3 @@ OPENROUTER_API_KEY=your_openrouter_api_key_here
 4. **Limit access**: Only give access to your repository to trusted collaborators.
 5. **Review GitHub Actions**: Be careful about which GitHub Actions you use, as they may have access to your secrets.
 
-## What Was Removed
-
-The following sensitive information was removed from the repository history:
-
-1. O2 Oracle credentials (email, password, app ID)
-2. Dynamic API key
-3. Dynamic environment ID
-4. NextAuth secret
-
-If you believe any of these credentials may have been compromised, please rotate them immediately.
