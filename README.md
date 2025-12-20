@@ -117,21 +117,39 @@ flowchart TD
 
 ### GitHub Action
 
-The GitHub Action workflow (`push_quality_score.yml`) runs automatically on pull request events:
+You can easily integrate GASS into your own repository using the official GitHub Action.
 
-1. **Code Analysis Process**:
-   - Extracts the PR diff for analysis
-   - Sends the diff to OpenRouter with a comprehensive code review prompt
-   - Uses Claude 3 Opus to evaluate code quality, readability, potential issues, documentation, and best practices
-   - Extracts a numerical score (0-100) from the AI's assessment
+**Usage:**
 
-2. **O2 Oracle Integration**:
-   - Authenticates with the O2 Oracle API
-   - Checks if the GitHub user already exists in the database
-   - For existing users: calculates a weighted average score based on previous contributions
-   - For new users: creates a new entry with the initial score
-   - Updates metrics including quality score, last activity timestamp, and contribution count
-   - Publishes changes to make them available on-chain
+Create a workflow file (e.g., `.github/workflows/gass.yml`):
+
+```yaml
+name: GASS Analysis
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: GASS Code Quality Score
+        uses: michael-bey/gass@main
+        with:
+          o2_email: ${{ secrets.O2_EMAIL }}
+          o2_password: ${{ secrets.O2_PASSWORD }}
+          o2_app_id: ${{ secrets.O2_APP_ID }}
+          o2_prop_list_id: ${{ secrets.O2_PROP_LIST_ID }}
+          openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+```
+
+The action will:
+1. Automatically fetch the PR diff.
+2. Send it to OpenRouter (Claude 3 Opus) for analysis.
+3. Calculate a quality score.
+4. Update the developer's metrics in the O2 Oracle.
 
 ### Smart Contract
 
