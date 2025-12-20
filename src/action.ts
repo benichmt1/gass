@@ -9,10 +9,11 @@ const INPUTS = {
   O2_PASSWORD: 'o2_password',
   O2_APP_ID: 'o2_app_id',
   O2_PROP_LIST_ID: 'o2_prop_list_id',
-  OPENROUTER_API_KEY: 'openrouter_api_key'
+  OPENROUTER_API_KEY: 'openrouter_api_key',
+  OPENROUTER_MODEL: 'openrouter_model'
 };
 
-async function getCodeReviewScore(diff: string, openRouterApiKey: string): Promise<number> {
+async function getCodeReviewScore(diff: string, openRouterApiKey: string, model: string): Promise<number> {
   const prompt = `Please perform a rigorous and critical code review of this diff. Be thorough and strict in your evaluation. Consider:
 
 1. Code Quality & Readability:
@@ -65,7 +66,7 @@ Reasoning: [detailed explanation of issues found and why the score was given]`;
       "X-Title": "Code Review Bot"
     },
     body: JSON.stringify({
-      model: "anthropic/claude-3-opus-20240229",
+      model: model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2
     })
@@ -84,10 +85,10 @@ Reasoning: [detailed explanation of issues found and why the score was given]`;
     throw new Error("Failed to get code review from OpenRouter API");
   }
   const reviewText = data.choices[0].message.content;
-  
+
   const scoreMatch = reviewText.match(/Score:\s*(\d+)/);
   const score = scoreMatch ? parseInt(scoreMatch[1]) : 50;
-  
+
   console.log("Code review response:", reviewText);
   return score;
 }
@@ -99,6 +100,7 @@ async function run() {
     const appId = core.getInput(INPUTS.O2_APP_ID, { required: true });
     const propListId = core.getInput(INPUTS.O2_PROP_LIST_ID, { required: true });
     const openRouterApiKey = core.getInput(INPUTS.OPENROUTER_API_KEY, { required: true });
+    const openRouterModel = core.getInput(INPUTS.OPENROUTER_MODEL) || 'anthropic/claude-opus-4.5';
 
     // Ensure we are in a PR context
     if (!github.context.payload.pull_request) {
@@ -114,7 +116,7 @@ async function run() {
     await exec.exec(`git fetch origin ${base.ref}:${base.ref}`);
     await exec.exec(`git fetch origin ${head.ref}:${head.ref}`);
     await exec.exec(`git checkout ${head.ref}`);
-    
+
     let diffOutput = '';
     const options = {
       listeners: {
@@ -126,112 +128,112 @@ async function run() {
     await exec.exec(`git diff origin/${base.ref}`, [], options);
 
     if (!diffOutput) {
-        console.log("No diff found. Skipping analysis.");
-        return;
+      console.log("No diff found. Skipping analysis.");
+      return;
     }
-    
-    // Limit diff size to prevent token limits
-    const truncatedDiff = diffOutput.substring(0, 10000); 
 
-    const score = await getCodeReviewScore(truncatedDiff, openRouterApiKey);
+    // Limit diff size to prevent token limits
+    const truncatedDiff = diffOutput.substring(0, 10000);
+
+    const score = await getCodeReviewScore(truncatedDiff, openRouterApiKey, openRouterModel);
     core.info(`Calculated quality score: ${score}`);
 
     // Login to O2
     const loginRes = await fetch("https://sandbox.api.o2-oracle.io/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const loginData: any = await loginRes.json();
+    if (!loginData.token) {
+      console.error("Login failed:", loginData);
+      throw new Error("O2 Login failed");
+    }
+    const token = loginData.token;
+
+    // Get Rows
+    const rowsRes = await fetch(
+      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!rowsRes.ok) {
+      throw new Error(`Failed to fetch rows: ${await rowsRes.text()}`);
+    }
+    const rowsData: any = await rowsRes.json();
+
+    const rows = rowsData.data.rows || [];
+    let existingUser = rows.find((row: any) => row.index === githubUsername || row.row_id === githubUsername);
+
+    if (!existingUser) {
+      existingUser = rows.find((row: any) => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
+    }
+
+    const operation = existingUser ? "update" : "create";
+
+    let finalScore = score;
+    if (existingUser) {
+      const currentScore = existingUser.data.quality_score || 0;
+      const commitCount = existingUser.data.review_count || 0;
+      finalScore = Math.round((currentScore * commitCount + score) / (commitCount + 1));
+    }
+
+    let reposObj = { [repo]: repo };
+    if (existingUser && existingUser.data && existingUser.data.repos) {
+      reposObj = { ...existingUser.data.repos, [repo]: repo };
+    }
+
+    const requestBody = {
+      operation: operation,
+      rows: {
+        [operation === 'update' ? existingUser.row_id : githubUsername]: {
+          repo: repo,
+          repos: reposObj,
+          last_updated: Math.floor(Date.now() / 1000),
+          review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
+          quality_score: finalScore
+        }
+      }
+    };
+
+    const createRes = await fetch(
+      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody)
+      }
+    );
+
+    if (!createRes.ok) {
+      throw new Error(`Failed to create/update row: ${await createRes.text()}`);
+    }
+
+    // Publish
+    const publishRes = await fetch(
+      `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/publish`,
+      {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const loginData: any = await loginRes.json();
-      if (!loginData.token) {
-        console.error("Login failed:", loginData);
-        throw new Error("O2 Login failed");
-      }
-      const token = loginData.token;
-
-      // Get Rows
-      const rowsRes = await fetch(
-        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         }
-      );
-      
-      if (!rowsRes.ok) {
-        throw new Error(`Failed to fetch rows: ${await rowsRes.text()}`);
       }
-      const rowsData: any = await rowsRes.json();
-      
-      const rows = rowsData.data.rows || [];
-      let existingUser = rows.find((row: any) => row.index === githubUsername || row.row_id === githubUsername);
+    );
 
-      if (!existingUser) {
-        existingUser = rows.find((row: any) => row.data && row.data.repo && row.data.repo.split('/')[0] === githubUsername);
-      }
-
-      const operation = existingUser ? "update" : "create";
-      
-      let finalScore = score;
-      if (existingUser) {
-        const currentScore = existingUser.data.quality_score || 0;
-        const commitCount = existingUser.data.review_count || 0;
-        finalScore = Math.round((currentScore * commitCount + score) / (commitCount + 1));
-      }
-
-      let reposObj = { [repo]: repo };
-      if (existingUser && existingUser.data && existingUser.data.repos) {
-        reposObj = { ...existingUser.data.repos, [repo]: repo };
-      }
-
-      const requestBody = {
-        operation: operation,
-        rows: {
-          [operation === 'update' ? existingUser.row_id : githubUsername]: {
-            repo: repo,
-            repos: reposObj,
-            last_updated: Math.floor(Date.now() / 1000),
-            review_count: existingUser ? (existingUser.data.review_count || 0) + 1 : 1,
-            quality_score: finalScore
-          }
-        }
-      };
-
-      const createRes = await fetch(
-        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/rows`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestBody)
-        }
-      );
-
-      if (!createRes.ok) {
-        throw new Error(`Failed to create/update row: ${await createRes.text()}`);
-      }
-
-      // Publish
-      const publishRes = await fetch(
-        `https://sandbox.api.o2-oracle.io/apps/${appId}/propertylists/${propListId}/publish`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
-
-      if (!publishRes.ok) {
-        throw new Error(`Failed to publish: ${await publishRes.text()}`);
-      }
-      core.info("Successfully published quality score to O2 Oracle.");
+    if (!publishRes.ok) {
+      throw new Error(`Failed to publish: ${await publishRes.text()}`);
+    }
+    core.info("Successfully published quality score to O2 Oracle.");
 
   } catch (error: any) {
     core.setFailed(error.message);

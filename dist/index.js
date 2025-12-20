@@ -34933,9 +34933,10 @@ const INPUTS = {
     O2_PASSWORD: 'o2_password',
     O2_APP_ID: 'o2_app_id',
     O2_PROP_LIST_ID: 'o2_prop_list_id',
-    OPENROUTER_API_KEY: 'openrouter_api_key'
+    OPENROUTER_API_KEY: 'openrouter_api_key',
+    OPENROUTER_MODEL: 'openrouter_model'
 };
-async function getCodeReviewScore(diff, openRouterApiKey) {
+async function getCodeReviewScore(diff, openRouterApiKey, model) {
     const prompt = `Please perform a rigorous and critical code review of this diff. Be thorough and strict in your evaluation. Consider:
 
 1. Code Quality & Readability:
@@ -34987,7 +34988,7 @@ Reasoning: [detailed explanation of issues found and why the score was given]`;
             "X-Title": "Code Review Bot"
         },
         body: JSON.stringify({
-            model: "anthropic/claude-3-opus-20240229",
+            model: model,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.2
         })
@@ -35015,6 +35016,7 @@ async function run() {
         const appId = core.getInput(INPUTS.O2_APP_ID, { required: true });
         const propListId = core.getInput(INPUTS.O2_PROP_LIST_ID, { required: true });
         const openRouterApiKey = core.getInput(INPUTS.OPENROUTER_API_KEY, { required: true });
+        const openRouterModel = core.getInput(INPUTS.OPENROUTER_MODEL) || 'anthropic/claude-opus-4.5';
         // Ensure we are in a PR context
         if (!github.context.payload.pull_request) {
             core.setFailed('This action must run on a pull_request event.');
@@ -35042,7 +35044,7 @@ async function run() {
         }
         // Limit diff size to prevent token limits
         const truncatedDiff = diffOutput.substring(0, 10000);
-        const score = await getCodeReviewScore(truncatedDiff, openRouterApiKey);
+        const score = await getCodeReviewScore(truncatedDiff, openRouterApiKey, openRouterModel);
         core.info(`Calculated quality score: ${score}`);
         // Login to O2
         const loginRes = await (0, node_fetch_1.default)("https://sandbox.api.o2-oracle.io/login", {
