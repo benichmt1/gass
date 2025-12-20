@@ -608,65 +608,104 @@ Error: ${error?.message || 'Unknown error'}`);
 
   return (
     <div className="gass-user-info">
-      <h3>GitHub User Information</h3>
-
-      {/* User info section */}
-      <div className="gass-info-grid">
-        <div className="gass-info-item">
-          <span className="gass-info-label">GitHub Username:</span>
-          <span className="gass-info-value">{githubUsername || 'Not connected'}</span>
-        </div>
-        {primaryWallet && (
+      {/* Section: Account Info */}
+      <div className="gass-section">
+        <div className="gass-section-title">Account Information</div>
+        <div className="gass-info-grid">
           <div className="gass-info-item">
-            <span className="gass-info-label">Wallet Address:</span>
-            <span className="gass-info-value">{primaryWallet.address?.substring(0, 6)}...{primaryWallet.address?.substring(primaryWallet.address.length - 4)}</span>
+            <span className="gass-info-label">GitHub Username</span>
+            <span className="gass-info-value">{githubUsername || 'Not connected'}</span>
           </div>
-        )}
-        <div className="gass-info-item">
-          <span className="gass-info-label">Network:</span>
-          <span className="gass-info-value">Base Sepolia Testnet</span>
+          {primaryWallet && (
+            <div className="gass-info-item">
+              <span className="gass-info-label">Wallet Address</span>
+              <span className="gass-info-value">{primaryWallet.address?.substring(0, 6)}...{primaryWallet.address?.substring(primaryWallet.address.length - 4)}</span>
+            </div>
+          )}
+          <div className="gass-info-item">
+            <span className="gass-info-label">Network</span>
+            <span className="gass-info-value">Base Sepolia Testnet</span>
+          </div>
         </div>
       </div>
 
-      {/* Status indicators */}
-      <div className="gass-status-container">
-        {/* Authentication status */}
-        <div className={`gass-status ${user ? 'gass-status-success' : 'gass-status-error'}`}>
-          <span className="gass-status-icon">{user ? '✅' : '❌'}</span>
-          <span>
-            {user
-              ? `Authenticated: ${githubUsername}`
-              : 'Not authenticated. Please connect your wallet and GitHub.'}
-          </span>
-        </div>
-
-        {/* Wallet connection status */}
-        <div className={`gass-status ${primaryWallet ? 'gass-status-success' : 'gass-status-error'}`}>
-          <span className="gass-status-icon">{primaryWallet ? '✅' : '❌'}</span>
-          <span>
-            {primaryWallet
-              ? `Wallet connected: ${primaryWallet.address?.substring(0, 6)}...${primaryWallet.address?.substring(primaryWallet.address.length - 4)}`
-              : 'No wallet connected. Please connect your wallet.'}
-          </span>
-        </div>
-
-        {/* Verification status */}
-        <div className={`gass-status ${verificationResult?.isVerified ? 'gass-status-success' : 'gass-status-error'}`}>
-          <span className="gass-status-icon">{verificationResult?.isVerified ? '✅' : '❌'}</span>
-          <span>
-            {verificationResult?.isVerified
-              ? `Verified GitHub user: ${githubUsername}`
-              : (verificationResult?.message || 'GitHub verification required')}
-          </span>
-        </div>
-
-        {/* Verification proof status - only show if proof exists */}
-        {verificationProof && !simulationMode && (
-          <div className="gass-status gass-status-success">
-            <span className="gass-status-icon">✅</span>
-            <span>Verification proof generated</span>
+      {/* Section: Status */}
+      <div className="gass-section">
+        <div className="gass-section-title">Connection Status</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div
+            style={{
+              padding: '0.625rem 1rem',
+              borderRadius: '100px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              border: '1px solid',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              ...(user ? {
+                background: 'rgba(52, 199, 89, 0.12)',
+                borderColor: 'rgba(52, 199, 89, 0.25)',
+                color: '#34C759'
+              } : {
+                background: 'rgba(255, 59, 48, 0.12)',
+                borderColor: 'rgba(255, 59, 48, 0.25)',
+                color: '#FF3B30'
+              })
+            }}
+          >
+            <span style={{ fontSize: '1rem' }}>{user ? '✓' : '○'}</span>
+            {user ? 'Authenticated' : 'Not Authenticated'}
           </div>
-        )}
+          <div
+            style={{
+              padding: '0.625rem 1rem',
+              borderRadius: '100px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              border: '1px solid',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              ...(primaryWallet ? {
+                background: 'rgba(52, 199, 89, 0.12)',
+                borderColor: 'rgba(52, 199, 89, 0.25)',
+                color: '#34C759'
+              } : {
+                background: 'rgba(255, 149, 0, 0.12)',
+                borderColor: 'rgba(255, 149, 0, 0.25)',
+                color: '#FF9500'
+              })
+            }}
+          >
+            <span style={{ fontSize: '1rem' }}>{primaryWallet ? '✓' : '○'}</span>
+            {primaryWallet ? 'Wallet Connected' : 'No Wallet'}
+          </div>
+          <div
+            style={{
+              padding: '0.625rem 1rem',
+              borderRadius: '100px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              border: '1px solid',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              ...(verificationResult?.isVerified ? {
+                background: 'rgba(52, 199, 89, 0.12)',
+                borderColor: 'rgba(52, 199, 89, 0.25)',
+                color: '#34C759'
+              } : {
+                background: 'rgba(0, 122, 255, 0.12)',
+                borderColor: 'rgba(0, 122, 255, 0.25)',
+                color: '#007AFF'
+              })
+            }}
+          >
+            <span style={{ fontSize: '1rem' }}>{verificationResult?.isVerified ? '✓' : '○'}</span>
+            {verificationResult?.isVerified ? 'GitHub Verified' : 'Verification Required'}
+          </div>
+        </div>
       </div>
 
       {/* Action buttons */}
@@ -692,79 +731,67 @@ Error: ${error?.message || 'Unknown error'}`);
         </button>
       </div>
 
-      {/* Error message */}
-      {errorMessage && (
-        <div className="gass-status gass-status-error">
-          <span className="gass-status-icon">❌</span>
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      {/* Primary Status Message Area - Centralized feedback */}
+      <div className="my-6">
+        {errorMessage && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 mb-4">
+            {errorMessage}
+          </div>
+        )}
 
-      {/* Status Messages - Only show one at a time */}
-      {!loading && (
-        <>
-          {/* Already received message */}
-          {alreadyReceived && !rewardProcessed && (
-            <div className="gass-status gass-status-success">
-              <span className="gass-status-icon">🎉</span>
-              <span>You have already received your rewards!</span>
-            </div>
-          )}
+        {alreadyReceived && !rewardProcessed && (
+          <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 mb-4">
+            🎉 You have already received your rewards!
+          </div>
+        )}
 
-          {/* Just processed message */}
-          {rewardProcessed && (
-            <div className="gass-status gass-status-success">
-              <span className="gass-status-icon">🎉</span>
-              <span>Rewards successfully processed!</span>
-            </div>
-          )}
+        {rewardProcessed && (
+          <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 mb-4">
+            🎉 Rewards successfully processed!
+          </div>
+        )}
 
-          {/* Eligibility result - only show if not already received and not just processed */}
-          {!alreadyReceived && !rewardProcessed && isEligibleForRewards !== null && (
-            <div className={`gass-status ${isEligibleForRewards ? 'gass-status-success' : 'gass-status-error'}`}>
-              <span className="gass-status-icon">{isEligibleForRewards ? '✅' : '❌'}</span>
-              <span>
-                {isEligibleForRewards && eligibilityResult
-                  ? `Eligible for ${eligibilityResult.eligibleTier} tier rewards!`
-                  : 'Not eligible for onchain rewards.'}
-              </span>
-            </div>
-          )}
-        </>
-      )}
+        {!alreadyReceived && !rewardProcessed && isEligibleForRewards !== null && (
+          <div className={`p-4 rounded-xl border mb-4 ${isEligibleForRewards ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
+            {isEligibleForRewards && eligibilityResult
+              ? `Eligible for ${eligibilityResult.eligibleTier} tier rewards!`
+              : 'Not eligible for onchain rewards.'}
+          </div>
+        )}
+      </div>
 
-      {/* Tier Information - only show if not already received and not just processed */}
+      {/* Tier Information */}
       {eligibilityResult && !loading && !alreadyReceived && !rewardProcessed && (
-        <div className="gass-tier-section">
-          <h4>Reward Tiers</h4>
+        <div className="gass-tier-section animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <h4 className="text-lg font-semibold mb-4 text-primary">Reward Tiers</h4>
           <div className="gass-tier-grid">
             <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.LIMITED ? 'eligible' : 'not-eligible'}`}>
               <div className="gass-tier-card-title">Limited Tier</div>
-              <div className="gass-tier-card-icon">{eligibilityResult.eligibleTier === RewardTier.LIMITED ? '✅' : '❌'}</div>
+              <div className="text-4xl my-4">{eligibilityResult.eligibleTier === RewardTier.LIMITED ? '✨' : '⚪'}</div>
               <div className="gass-tier-card-description">No contribution in 30+ days</div>
             </div>
             <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.STANDARD ? 'eligible' : 'not-eligible'}`}>
               <div className="gass-tier-card-title">Standard Tier</div>
-              <div className="gass-tier-card-icon">{eligibilityResult.eligibleTier === RewardTier.STANDARD ? '✅' : '❌'}</div>
+              <div className="text-4xl my-4">{eligibilityResult.eligibleTier === RewardTier.STANDARD ? '🌟' : '⚪'}</div>
               <div className="gass-tier-card-description">Recent activity, ≤ 100 Reviews</div>
             </div>
             <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.BONUS ? 'eligible' : 'not-eligible'}`}>
               <div className="gass-tier-card-title">Bonus Tier</div>
-              <div className="gass-tier-card-icon">{eligibilityResult.eligibleTier === RewardTier.BONUS ? '✅' : '❌'}</div>
-              <div className="gass-tier-card-description">Recent activity, > 100 Reviews</div>
+              <div className="text-4xl my-4">{eligibilityResult.eligibleTier === RewardTier.BONUS ? '🏆' : '⚪'}</div>
+              <div className="gass-tier-card-description">Recent activity, &gt; 100 Reviews</div>
             </div>
           </div>
-          <p className="gass-tier-note">
-            Note: All tiers require a quality score > 50. Ineligible users are not shown a tier.
+          <p className="gass-tier-note mt-6 text-sm opacity-60 text-center">
+            Note: All tiers require a quality score &gt; 50. Ineligible users are not shown a tier.
           </p>
         </div>
       )}
 
-      {/* Claim Button - only show if eligible, not already received, and not just processed */}
+      {/* Claim Button */}
       {isEligibleForRewards && !alreadyReceived && !rewardProcessed && (
-        <div className="gass-action-buttons">
+        <div className="flex justify-center mt-8">
           <button
-            className="gass-button gass-button-primary"
+            className="gass-button gass-button-primary text-lg px-8 py-3"
             onClick={handleProcessReward}
             disabled={processingReward}
           >
@@ -773,20 +800,23 @@ Error: ${error?.message || 'Unknown error'}`);
         </div>
       )}
 
-      {/* Contract Call Information - only show when debug mode is enabled */}
-      {contractCallInfo && debugMode && (
-        <div className="gass-debug-info">
-          <h4>Contract Call Details:</h4>
-          <pre>{contractCallInfo}</pre>
-        </div>
-      )}
-
-      {/* Debug information - only show when debug mode is enabled */}
-      {debugInfo && debugMode && (
-        <div className="gass-debug-info">
-          <h4>Debug Information:</h4>
-          <pre>{debugInfo}</pre>
-        </div>
+      {/* Debug information - Collapsible */}
+      {(debugMode && (contractCallInfo || debugInfo)) && (
+        <details className="mt-8 p-4 rounded-xl bg-black/20 border border-white/10">
+          <summary className="cursor-pointer font-medium opacity-70 hover:opacity-100">Development Details</summary>
+          {contractCallInfo && (
+            <div className="mt-4">
+              <h4 className="text-xs uppercase font-bold opacity-50 mb-2">Contract Call</h4>
+              <pre className="text-xs overflow-x-auto p-4 rounded bg-black/40 text-green-400 font-mono">{contractCallInfo}</pre>
+            </div>
+          )}
+          {debugInfo && (
+            <div className="mt-4">
+              <h4 className="text-xs uppercase font-bold opacity-50 mb-2">Debug Info</h4>
+              <pre className="text-xs overflow-x-auto p-4 rounded bg-black/40 text-blue-400 font-mono">{debugInfo}</pre>
+            </div>
+          )}
+        </details>
       )}
     </div>
   );
