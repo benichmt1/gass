@@ -24,6 +24,7 @@ export default function RootLayout({
       <head>
         <title>GitHub Activity Scoring System</title>
         <meta name="description" content="GASS - GitHub Activity Scoring System by MichaelBe" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
         {/* Enhanced script to set initial theme with robust storage handling */}
         <script
           dangerouslySetInnerHTML={{
