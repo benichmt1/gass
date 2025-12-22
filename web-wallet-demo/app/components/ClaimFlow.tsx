@@ -76,7 +76,7 @@ export default function ClaimFlow() {
     useEffect(() => {
         const username = authGithubUsername ||
             (user as any)?.verifiedCredentials?.find(
-                (credential) => credential.format === 'oauth' && credential.oauthProvider === 'github'
+                (credential: any) => credential.format === 'oauth' && credential.oauthProvider === 'github'
             )?.oauthUsername || '';
         setGithubUsername(username);
     }, [authGithubUsername, user]);
