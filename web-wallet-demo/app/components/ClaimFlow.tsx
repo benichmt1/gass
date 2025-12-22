@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { isEthereumWallet } from '@dynamic-labs/ethereum';
-import { parseEther, type Address } from 'viem';
+import { parseEther, type Address, type Hex } from 'viem';
 import {
     checkDistributionStatus,
     processReward,
@@ -238,8 +238,8 @@ export default function ClaimFlow() {
                     primaryWallet.address as Address,
                     parseEther('1'),
                     githubUsername,
-                    verificationProof || undefined,
-                    verificationTimestamp || undefined
+                    verificationProof as Hex,
+                    verificationTimestamp!
                 );
 
                 if (result.success) {
