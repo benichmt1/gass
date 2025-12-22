@@ -123,7 +123,7 @@ export default function GithubUserInfo({ isDarkMode, column }: GithubUserInfoPro
       authGithubUsername,
       dynamicWalletAddress: primaryWallet?.address || null,
       authWalletAddress,
-      hasJwt: !!user?.jwt,
+      hasJwt: !!authToken,
       dynamicIsAuthenticated: isAuthenticated
     }, null, 2));
 
