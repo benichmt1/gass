@@ -27,25 +27,26 @@ export default function Providers({
           ],
           socialProvidersFilter: () => [SocialSignInProviderEnum.Github],
 
-          embeddedWallets: {
-            enabled: true,
-            walletConnectEnabled: true,
-            createOnLogin: true,
-            network: {
-              chainId: 84532,
-              name: "BaseSepolia",
-              displayName: "Base Sepolia",
-              rpcUrls: ["https://84532.rpc.thirdweb.com"],
-              blockExplorerUrls: ["https://sepolia-explorer.base.org"],
-              nativeCurrency: {
-                name: "Sepolia Ether",
-                symbol: "ETH",
-                decimals: 18,
-              },
-              isTestnet: true,
-            },
-          },
-          defaultEvmNetwork: "84532",
+          // embeddedWallets is not available in this SDK version
+          // embeddedWallets: {
+          //   enabled: true,
+          //   walletConnectEnabled: true,
+          //   createOnLogin: true,
+          //   network: {
+          //     chainId: 84532,
+          //     name: "BaseSepolia",
+          //     displayName: "Base Sepolia",
+          //     rpcUrls: ["https://84532.rpc.thirdweb.com"],
+          //     blockExplorerUrls: ["https://sepolia-explorer.base.org"],
+          //     nativeCurrency: {
+          //       name: "Sepolia Ether",
+          //       symbol: "ETH",
+          //       decimals: 18,
+          //     },
+          //     isTestnet: true,
+          //   },
+          // },
+          // defaultEvmNetwork: "84532",
 
           // smartWalletOptions: { // Commented out for MetaMask focus
           //   enabled: true,
