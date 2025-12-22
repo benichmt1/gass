@@ -1148,7 +1148,7 @@ div[data-testid="wallet-connector-button"] {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .gass-container {
-    padding: 5rem 1rem 2rem;
+    padding: 7rem 1rem 2rem;
   }
 
   .gass-navbar {

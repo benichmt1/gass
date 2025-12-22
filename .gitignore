@@ -23,3 +23,5 @@ node_modules
 # Local environment files
 web-wallet-demo/.env.local
 .github/.env
+.vercel
+.env*.local
