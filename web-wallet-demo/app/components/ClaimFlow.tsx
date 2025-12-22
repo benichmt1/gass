@@ -8,6 +8,7 @@ import {
     checkDistributionStatus,
     processReward,
     checkEligibilityTier,
+    verifyAndSignEligibility,
     RewardTier,
     type EligibilityResult,
     GASS_CONTRACT_ADDRESS
@@ -232,13 +233,26 @@ export default function ClaimFlow() {
                 if (!isEthereumWallet(primaryWallet)) {
                     throw new Error('Primary wallet is not an Ethereum wallet');
                 }
+
+                // 1. Verify eligibility and get trusted signature from backend
+                const verificationResult = await verifyAndSignEligibility(
+                    githubUsername,
+                    primaryWallet.address as string,
+                    verificationProof as string,
+                    verificationTimestamp!
+                );
+
+                if (!verificationResult.success || !verificationResult.signature) {
+                    throw new Error(verificationResult.error || "Server verification failed");
+                }
+
                 const walletClient = await primaryWallet.getWalletClient();
                 const result = await processReward(
                     walletClient,
                     primaryWallet.address as Address,
-                    parseEther('1'),
+                    verificationResult.amount || parseEther('1'),
                     githubUsername,
-                    verificationProof as Hex,
+                    verificationResult.signature,
                     verificationTimestamp!
                 );
 
