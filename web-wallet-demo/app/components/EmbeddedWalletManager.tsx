@@ -15,7 +15,6 @@ export default function EmbeddedWalletManager() {
 
   // Use the embedded wallet hook from Dynamic
   const {
-    embeddedWallet,
     getNetworkInfo,
     switchNetwork,
   } = useEmbeddedWallet();
@@ -171,7 +170,7 @@ export default function EmbeddedWalletManager() {
         <div className="gass-debug-info">
           <h4>Embedded Wallet Debug Info:</h4>
           <pre>
-            {`Wallet Address: ${embeddedWallet?.address || primaryWallet?.address || 'Unknown'}
+            {`Wallet Address: ${primaryWallet?.address || 'Unknown'}
 Target Chain ID: ${baseSepolia}
 Is Embedded: ${isEmbeddedWallet(primaryWallet)}
 Storage Type: ${safeStorage.getStorageType()}
