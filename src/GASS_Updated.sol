@@ -21,8 +21,12 @@ contract GASS_Updated is RulesEngineClientCustom {
     address public constant O2_ORACLE_ADDRESS = 0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2;
 
     // Trusted Signer Address (Backend API Key)
-    // Defaulting to Anvil Account 0 for this demo: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    address public trustedSigner = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    // Trusted Signer Address (Backend API Key)
+    address public trustedSigner;
+
+    constructor(address _trustedSigner) {
+        trustedSigner = _trustedSigner;
+    }
 
     // Mapping to track processed distributions
     mapping(string => bool) public hasReceivedDistribution;
