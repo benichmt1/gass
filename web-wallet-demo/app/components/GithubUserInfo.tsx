@@ -415,7 +415,7 @@ Timestamp: ${formattedTimestamp}`);
         const simulationReason = !hasStorageAccess ? ' (Storage unavailable)' : '';
         setContractCallInfo(`SIMULATION${simulationReason}: Contract call completed on Base Sepolia network.
 Quality Score: ${simulatedResult.qualityScore} (Threshold: > 50)
-Last Contribution: ${new Date(simulatedResult.lastUpdated * 1000).toLocaleDateString()} (Must be within last 30 days: ${new Date(1750000000 * 1000).toLocaleDateString()})
+Last Contribution: ${new Date((simulatedResult.lastUpdated || 0) * 1000).toLocaleDateString()} (Must be within last 30 days: ${new Date(1750000000 * 1000).toLocaleDateString()})
 Review Count: ${simulatedResult.reviewCount} (Threshold for Bonus: > 100)
 Eligible Tier: ${simulatedResult.eligibleTier}`);
       } else {
