@@ -7,7 +7,7 @@ import { signIn, useSession } from 'next-auth/react';
  * This hook will automatically sign in to NextAuth when the user logs in with Dynamic
  */
 export function useDynamicAuth() {
-  const { user, authToken, isAuthenticated, primaryWallet } = useDynamicContext();
+  const { user, isAuthenticated, primaryWallet } = useDynamicContext();
 
   // Use try/catch to handle the case when SessionProvider is not available
   let session = null;
@@ -22,6 +22,26 @@ export function useDynamicAuth() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  // Try to get JWT token from Dynamic
+  useEffect(() => {
+    const getToken = async () => {
+      if (primaryWallet && isAuthenticated) {
+        try {
+          // Try to get JWT from connector if available
+          const connector = primaryWallet.connector;
+          if (connector && 'getAuthToken' in connector) {
+            const token = await (connector as any).getAuthToken();
+            setAuthToken(token);
+          }
+        } catch (err) {
+          console.warn('Could not get auth token from connector:', err);
+        }
+      }
+    };
+    getToken();
+  }, [primaryWallet, isAuthenticated]);
 
   // Sign in to NextAuth when the user logs in with Dynamic
   useEffect(() => {
@@ -53,14 +73,14 @@ export function useDynamicAuth() {
   }, [isAuthenticated, authToken, session]);
 
   // Get GitHub username from Dynamic or NextAuth
-  const githubUsername = session?.user?.githubUsername ||
-    user?.verifiedCredentials?.find(
-      (credential) => credential.format === 'oauth' && credential.oauthProvider === 'github'
+  const githubUsername = (session as any)?.user?.githubUsername ||
+    (user as any)?.verifiedCredentials?.find(
+      (credential: any) => credential.format === 'oauth' && credential.oauthProvider === 'github'
     )?.oauthUsername ||
     null;
 
   // Get wallet address from Dynamic or NextAuth
-  const walletAddress = session?.user?.walletAddress ||
+  const walletAddress = (session as any)?.user?.walletAddress ||
     primaryWallet?.address ||
     null;
 
@@ -68,10 +88,10 @@ export function useDynamicAuth() {
     isAuthenticated: !!session || isAuthenticated || !!primaryWallet,
     isLoading: isLoading || status === 'loading',
     error,
-    user: session?.user || user,
+    user: (session as any)?.user || user,
     githubUsername,
     walletAddress,
-    jwt: session?.jwt || authToken,
+    jwt: (session as any)?.jwt || authToken,
     primaryWallet: primaryWallet // Return primaryWallet from Dynamic context
   };
 }
