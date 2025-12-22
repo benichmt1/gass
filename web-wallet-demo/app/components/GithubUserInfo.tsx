@@ -481,7 +481,7 @@ Error: ${fallbackResult.error}`);
 
         setContractCallInfo(`EMERGENCY FALLBACK: All checks failed, showing default data.
 Quality Score: ${emergencyFallbackResult.qualityScore} (Threshold: > 50)
-Last Contribution: ${new Date(emergencyFallbackResult.lastUpdated * 1000).toLocaleDateString()} (Must be within last 30 days: ${new Date(1750000000 * 1000).toLocaleDateString()})
+Last Contribution: ${new Date((emergencyFallbackResult.lastUpdated || 0) * 1000).toLocaleDateString()} (Must be within last 30 days: ${new Date(1750000000 * 1000).toLocaleDateString()})
 Review Count: ${emergencyFallbackResult.reviewCount} (Threshold for Bonus: > 100)
 Eligible Tier: ${emergencyFallbackResult.eligibleTier}
 Error: ${emergencyFallbackResult.error}`);
