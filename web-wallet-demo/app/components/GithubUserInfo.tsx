@@ -545,13 +545,17 @@ Status: Confirmed`);
           const walletClient = await primaryWallet.getWalletClient();
 
           // Process the reward (1 token as example amount)
+          // Use fallback values if verification data is not available
+          const proof = (verificationProof || '0x0') as `0x${string}`;
+          const timestamp = verificationTimestamp || Math.floor(Date.now() / 1000);
+
           const result = await processReward(
             walletClient,
             primaryWallet.address as Address,
             parseEther('1'), // 1 token
             githubUsername,
-            (verificationProof as `0x${string}` | undefined),
-            verificationTimestamp ?? undefined
+            proof,
+            timestamp
           );
 
           if (result.success) {
