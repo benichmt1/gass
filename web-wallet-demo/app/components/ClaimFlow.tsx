@@ -229,6 +229,9 @@ export default function ClaimFlow() {
                 setTxHash(`0x${Math.random().toString(16).substring(2, 42)}`);
                 setAlreadyReceived(true);
             } else {
+                if (!isEthereumWallet(primaryWallet)) {
+                    throw new Error('Primary wallet is not an Ethereum wallet');
+                }
                 const walletClient = await primaryWallet.getWalletClient();
                 const result = await processReward(
                     walletClient,
