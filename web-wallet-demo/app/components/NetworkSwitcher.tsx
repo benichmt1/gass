@@ -34,7 +34,7 @@ export default function NetworkSwitcher() {
           const networkVal = await (primaryWallet.connector as any).getNetwork();
           chainId = networkVal;
         } else {
-          const client = await primaryWallet.getWalletClient();
+          const client = await (primaryWallet as any).getWalletClient();
           chainId = await client.getChainId();
         }
 

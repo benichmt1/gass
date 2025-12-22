@@ -47,7 +47,7 @@ export default function EmbeddedWalletManager() {
               const network = await (primaryWallet.connector as any).getNetwork();
               chainId = network;
             } else {
-              const client = await primaryWallet.getWalletClient();
+              const client = await (primaryWallet as any).getWalletClient();
               chainId = await client.getChainId();
             }
           } catch (err) {
