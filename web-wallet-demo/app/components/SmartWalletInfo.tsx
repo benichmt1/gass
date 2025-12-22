@@ -30,7 +30,7 @@ export default function SmartWalletInfo() {
       }
 
       try {
-        const walletClient = await primaryWallet.connector.getWalletClient();
+        const walletClient = await (primaryWallet.connector as any).getWalletClient();
         if (!walletClient) {
           setNetworkInfo('Unable to get wallet information');
           return;
