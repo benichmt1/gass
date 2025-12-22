@@ -330,7 +330,7 @@ Timestamp: ${formattedTimestamp}`);
     if (primaryWallet && !effectiveSimulationMode) {
       try {
         const networkInfo = await primaryWallet.connector?.getNetwork?.();
-        const currentChainId = networkInfo?.chain?.id;
+        const currentChainId = typeof networkInfo === 'object' ? (networkInfo as any)?.chain?.id : networkInfo;
 
         // Base Sepolia chain ID is 84532
         const isBaseSepoliaNetwork = currentChainId === 84532;
