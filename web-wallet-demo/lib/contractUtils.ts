@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, http, type Address } from 'viem';
+import { createPublicClient, createWalletClient, http, type Address, type Hex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 // GASS Contract address on Base Sepolia
@@ -17,7 +17,7 @@ export const GASS_ABI = [
       { "internalType": "address", "name": "to", "type": "address" },
       { "internalType": "uint256", "name": "amount", "type": "uint256" },
       { "internalType": "string", "name": "githubUsername", "type": "string" },
-      { "internalType": "string", "name": "verificationToken", "type": "string" },
+      { "internalType": "bytes", "name": "signature", "type": "bytes" },
       { "internalType": "uint256", "name": "verificationTimestamp", "type": "uint256" }
     ],
     "name": "processReward",
@@ -184,26 +184,62 @@ export async function checkEligibilityTier(githubUsername: string): Promise<Elig
   }
 }
 
+// Check eligibility and get signature from backend
+export async function verifyAndSignEligibility(
+  githubUsername: string,
+  address: string,
+  proof: string,
+  timestamp: number
+): Promise<{ success: boolean; signature?: Hex; amount?: bigint; error?: string; tier?: string }> {
+  try {
+    const response = await fetch('/api/verify-eligibility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        githubUsername,
+        address,
+        proof,
+        timestamp
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Verification failed');
+    }
+
+    return {
+      success: true,
+      signature: data.signature as Hex,
+      amount: BigInt(data.amount),
+      tier: data.tier
+    };
+  } catch (error) {
+    console.error('Error verifying eligibility:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown verification error'
+    };
+  }
+}
+
 // Process a reward for a GitHub username using the connected wallet
 export async function processReward(
   walletClient: any,
   to: Address,
   amount: bigint,
   githubUsername: string,
-  verificationProof?: string,
-  verificationTimestamp?: number
+  signature: Hex,
+  verificationTimestamp: number
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
   try {
-    // Default values for verification if not provided
-    const proof = verificationProof || '';
-    const timestamp = verificationTimestamp || Math.floor(Date.now() / 1000);
-
     // Prepare the transaction
     const { request } = await publicClient.simulateContract({
       address: GASS_CONTRACT_ADDRESS as Address,
       abi: GASS_ABI,
       functionName: 'processReward',
-      args: [to, amount, githubUsername, proof, BigInt(timestamp)],
+      args: [to, amount, githubUsername, signature, BigInt(verificationTimestamp)],
       account: to,
     });
 

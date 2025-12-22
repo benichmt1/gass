@@ -26,8 +26,8 @@ body {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: black;
+  color: var(--text-primary);
+  background: var(--bg-color);
 }
 
 a {

@@ -1,9 +1,12 @@
 "use client";
 
 import "./globals.css";
+import "./gass-theme.css";
 import { Space_Grotesk } from "next/font/google";
 import Providers from "@/lib/providers";
 import { SessionProvider } from "@/lib/SessionProvider";
+import { Toaster } from "@/app/components/ui/toaster";
+import { TooltipProvider } from "@/app/components/ui/tooltip";
 
 
 const spaceGrotesk = Space_Grotesk({
@@ -104,7 +107,12 @@ export default function RootLayout({
       </head>
       <body className={spaceGrotesk.className}>
         <SessionProvider>
-          <Providers>{children}</Providers>
+          <Providers>
+            <TooltipProvider>
+              {children}
+              <Toaster />
+            </TooltipProvider>
+          </Providers>
         </SessionProvider>
       </body>
     </html>
