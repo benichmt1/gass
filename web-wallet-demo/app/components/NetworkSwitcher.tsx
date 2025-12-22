@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useToggles } from '@/app/components/HeaderToggles';
 import safeStorage from '@/lib/safeStorage';
+import { Check, AlertTriangle, XCircle } from 'lucide-react';
 
 export default function NetworkSwitcher() {
   const {
@@ -71,8 +72,8 @@ export default function NetworkSwitcher() {
         console.error('Error checking network:', err);
         // Only set user-facing errors for non-storage issues
         if (!String(err).includes('No available storage found') &&
-            !String(err).includes('storage') &&
-            !String(err).includes('localStorage')) {
+          !String(err).includes('storage') &&
+          !String(err).includes('localStorage')) {
           setError(err instanceof Error ? err.message : String(err));
         }
       }
@@ -84,6 +85,7 @@ export default function NetworkSwitcher() {
     }, 500);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [primaryWallet, network]);
 
   // Function to switch to Base Sepolia
@@ -124,8 +126,8 @@ export default function NetworkSwitcher() {
       console.error('Failed to switch network:', err);
       // Only show error to user if it's not a storage-related issue
       if (!String(err).includes('No available storage found') &&
-          !String(err).includes('storage') &&
-          !String(err).includes('localStorage')) {
+        !String(err).includes('storage') &&
+        !String(err).includes('localStorage')) {
         setError('Failed to switch to Base Sepolia. Please try again or switch manually.');
       }
     } finally {
@@ -141,7 +143,7 @@ export default function NetworkSwitcher() {
   return (
     <div className="gass-network-switcher">
       <div className={`gass-status ${currentChainId === baseSepolia ? 'gass-status-success' : 'gass-status-warning'}`}>
-        <span className="gass-status-icon">{currentChainId === baseSepolia ? '✅' : '⚠️'}</span>
+        <span className="gass-status-icon">{currentChainId === baseSepolia ? <Check className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}</span>
         <span>
           {currentChainId === baseSepolia
             ? 'Connected to Base Sepolia'
@@ -161,7 +163,7 @@ export default function NetworkSwitcher() {
 
       {error && (
         <div className="gass-status gass-status-error">
-          <span className="gass-status-icon">❌</span>
+          <span className="gass-status-icon"><XCircle className="w-4 h-4" /></span>
           <span>{error}</span>
         </div>
       )}
