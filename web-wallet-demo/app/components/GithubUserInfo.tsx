@@ -67,7 +67,7 @@ export default function GithubUserInfo({ isDarkMode, column }: GithubUserInfoPro
   useEffect(() => {
     console.log('User object:', user);
     console.log('Auth state:', { isAuthenticated, authGithubUsername, authWalletAddress, authToken });
-    console.log('Dynamic auth token:', user?.jwt);
+    console.log('Dynamic auth token:', authToken);
     console.log('Primary wallet:', primaryWallet);
     if (primaryWallet) {
       console.log('Primary Wallet ID on login/update:', primaryWallet.id);
