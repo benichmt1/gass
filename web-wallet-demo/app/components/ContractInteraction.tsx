@@ -3,47 +3,18 @@
 import { useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useToggles } from '@/app/components/HeaderToggles';
-import { Address, createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
 import { isEthereumWallet, EthereumWalletConnector } from '@dynamic-labs/ethereum';
-
-// GASS Contract address and ABI
-const GASS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_GASS_CONTRACT_ADDRESS || '0x171A95CE45025f0AE0e56eC67Bf7084117e335d8';
-const GASS_ABI = [
-  {
-    "inputs": [
-      { "internalType": "string", "name": "githubUsername", "type": "string" }
-    ],
-    "name": "checkEligibility",
-    "outputs": [
-      { "internalType": "string", "name": "tier", "type": "string" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "string", "name": "githubUsername", "type": "string" }
-    ],
-    "name": "claimReward",
-    "outputs": [{ "internalType": "bool", "name": "success", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "string", "name": "githubUsername", "type": "string" }
-    ],
-    "name": "hasClaimedReward",
-    "outputs": [{ "internalType": "bool", "name": "claimed", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
-
-// Base Sepolia RPC URL
-const RPC_URL = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+import {
+  checkEligibilityTier,
+  processReward as processRewardUtil,
+  verifyAndSignEligibility,
+  checkDistributionStatus,
+  GASS_CONTRACT_ADDRESS,
+  type EligibilityResult,
+  RewardTier
+} from '@/lib/contractUtils';
+import { getDynamicJwtToken } from '@/lib/verificationUtils';
+import { parseEther, type Address, type Hex } from 'viem';
 
 export default function ContractInteraction() {
   const { primaryWallet, user } = useDynamicContext();
@@ -51,7 +22,7 @@ export default function ContractInteraction() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [eligibilityInfo, setEligibilityInfo] = useState<{ tier: string, amount: bigint } | null>(null);
+  const [eligibilityInfo, setEligibilityInfo] = useState<EligibilityResult | null>(null);
   const [hasAlreadyClaimed, setHasAlreadyClaimed] = useState<boolean | null>(null);
   const [githubUsername, setGithubUsername] = useState<string>('');
 
@@ -111,11 +82,6 @@ export default function ContractInteraction() {
 
   // Check eligibility for rewards
   const checkEligibility = async () => {
-    if (!primaryWallet) {
-      setError('No wallet connected. Please connect your wallet first.');
-      return;
-    }
-
     const username = githubUsername || userGithubUsername;
     if (!username) {
       setError('No GitHub username provided. Please enter a username or connect with GitHub.');
@@ -128,45 +94,28 @@ export default function ContractInteraction() {
     setEligibilityInfo(null);
 
     try {
-      // Check if we're on the right network
-      const isCorrectNetwork = await checkNetwork();
-      if (!isCorrectNetwork) {
-        setError('Please switch to Base Sepolia network to interact with the contract.');
-        setLoading(false);
-        return;
+      // Check if we're on the right network (if wallet is connected)
+      if (primaryWallet) {
+        const isCorrectNetwork = await checkNetwork();
+        if (!isCorrectNetwork) {
+          // Continue anyway as read operations might work without correct network depending on provider
+          console.warn('Network check failed, checking eligibility anyway');
+        }
       }
 
-      // Create a public client for read-only operations
-      const publicClient = createPublicClient({
-        chain: baseSepolia,
-        transport: http(RPC_URL),
-      });
+      // Check distribution status
+      const claimed = await checkDistributionStatus(username);
+      setHasAlreadyClaimed(claimed);
 
-      // Check if user has already claimed
-      const claimed = await publicClient.readContract({
-        address: GASS_CONTRACT_ADDRESS as Address,
-        abi: GASS_ABI,
-        functionName: 'hasClaimedReward',
-        args: [username],
-      });
+      // Check eligibility tier (Client-side simulation for display)
+      const eligibilityResult = await checkEligibilityTier(username);
+      setEligibilityInfo(eligibilityResult);
 
-      setHasAlreadyClaimed(claimed as boolean);
+      const isEligible = eligibilityResult.eligibleTier !== RewardTier.NONE &&
+        eligibilityResult.eligibleTier !== RewardTier.REJECTED;
 
-      // Call the contract to check eligibility
-      const [tier, amount] = await publicClient.readContract({
-        address: GASS_CONTRACT_ADDRESS as Address,
-        abi: GASS_ABI,
-        functionName: 'checkEligibility',
-        args: [username],
-      }) as [string, bigint];
-
-      setEligibilityInfo({ tier, amount });
-
-      // Format the amount to ETH (assuming 18 decimals)
-      const formattedAmount = Number(amount) / 10 ** 18;
-
-      setResult(`GitHub user "${username}" is eligible for the "${tier}" tier with ${formattedAmount} tokens.
-${claimed ? '⚠️ You have already claimed your reward.' : '✅ Your reward is available to claim!'}`);
+      setResult(`GitHub user "${username}" is eligible for the "${eligibilityResult.eligibleTier}" tier.
+${claimed ? '⚠️ You have already claimed your reward.' : isEligible ? '✅ Your reward is available to claim!' : '❌ Not eligible for rewards.'}`);
     } catch (err) {
       console.error('Error checking eligibility:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -193,6 +142,13 @@ ${claimed ? '⚠️ You have already claimed your reward.' : '✅ Your reward is
       return;
     }
 
+    if (!eligibilityInfo ||
+      eligibilityInfo.eligibleTier === RewardTier.NONE ||
+      eligibilityInfo.eligibleTier === RewardTier.REJECTED) {
+      setError('You are not eligible for rewards yet.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -206,39 +162,65 @@ ${claimed ? '⚠️ You have already claimed your reward.' : '✅ Your reward is
         return;
       }
 
-      // Get the wallet client
-      const ethereumWallet = primaryWallet;
-      if (!isEthereumWallet(ethereumWallet)) throw new Error('Not an Ethereum wallet');
-      const walletClient = await (ethereumWallet.connector as EthereumWalletConnector).getWalletClient();
+      // 1. Generate Proof of Ownership (JWT)
+      let proof = '';
+      let timestamp = 0;
 
+      try {
+        const jwtResult = await getDynamicJwtToken();
+        if (jwtResult.isVerified && jwtResult.proof) {
+          proof = jwtResult.proof;
+          timestamp = jwtResult.timestamp || Math.floor(Date.now() / 1000);
+        } else {
+          throw new Error('Could not generate verification proof. Please log in again.');
+        }
+      } catch (e) {
+        console.warn('Error generating proof:', e);
+        throw new Error('Failed to generate verification proof: ' + (e instanceof Error ? e.message : String(e)));
+      }
+
+      // 2. Verify Eligibility & Get Signature from Backend
+      setResult('Verifying eligibility with trusted backend...');
+
+      const verificationResult = await verifyAndSignEligibility(
+        username,
+        primaryWallet.address,
+        proof,
+        timestamp
+      );
+
+      if (!verificationResult.success || !verificationResult.signature || !verificationResult.amount) {
+        throw new Error(verificationResult.error || 'Backend verification failed');
+      }
+
+      // Get the wallet client
+      const walletClient = await (primaryWallet.connector as EthereumWalletConnector).getWalletClient();
       if (!walletClient) {
         throw new Error('Failed to get wallet client');
       }
 
-      // Create a public client for simulating transactions
-      const publicClient = createPublicClient({
-        chain: baseSepolia,
-        transport: http(RPC_URL),
-      });
+      // 3. Submit Claim Transaction
+      setResult('Submitting claim transaction...');
 
-      // Prepare the transaction
-      const { request } = await publicClient.simulateContract({
-        address: GASS_CONTRACT_ADDRESS as Address,
-        abi: GASS_ABI,
-        functionName: 'claimReward',
-        args: [username],
-        account: primaryWallet.address as Address,
-      });
+      const processResult = await processRewardUtil(
+        walletClient,
+        primaryWallet.address as Address,
+        verificationResult.amount,
+        username,
+        verificationResult.signature,
+        timestamp
+      );
 
-      // Send the transaction
-      const hash = await walletClient.writeContract(request);
-
-      setResult(`Claim transaction sent! Transaction hash: ${hash}
+      if (processResult.success) {
+        setResult(`Claim transaction sent! Transaction hash: ${processResult.txHash || 'Simulated'}
 Please wait for the transaction to be confirmed on the Base Sepolia network.
-View on BaseScan: https://sepolia.basescan.org/tx/${hash}`);
+${processResult.txHash && !processResult.txHash.startsWith('0x') ? '' : `View on BaseScan: https://sepolia.basescan.org/tx/${processResult.txHash}`}`);
 
-      // Set claimed to true after successful transaction
-      setHasAlreadyClaimed(true);
+        // Set claimed to true after successful transaction
+        setHasAlreadyClaimed(true);
+      } else {
+        throw new Error(processResult.error || 'Failed to process reward');
+      }
     } catch (err) {
       console.error('Error claiming reward:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -289,11 +271,11 @@ View on BaseScan: https://sepolia.basescan.org/tx/${hash}`);
           <h4>Reward Information:</h4>
           <div className="gass-info-item">
             <span className="gass-info-label">Eligible Tier:</span>
-            <span className="gass-info-value">{eligibilityInfo.tier}</span>
+            <span className="gass-info-value">{eligibilityInfo.eligibleTier}</span>
           </div>
           <div className="gass-info-item">
-            <span className="gass-info-label">Reward Amount:</span>
-            <span className="gass-info-value">{Number(eligibilityInfo.amount) / 10 ** 18} tokens</span>
+            <span className="gass-info-label">Quality Score:</span>
+            <span className="gass-info-value">{eligibilityInfo.qualityScore || 'N/A'}</span>
           </div>
           <div className="gass-info-item">
             <span className="gass-info-label">Claim Status:</span>
@@ -303,6 +285,11 @@ View on BaseScan: https://sepolia.basescan.org/tx/${hash}`);
                 : '✅ Available to claim'}
             </span>
           </div>
+          {eligibilityInfo.error && (
+            <div className="mt-2 text-xs text-red-400">
+              {eligibilityInfo.error}
+            </div>
+          )}
         </div>
       )}
 
@@ -329,8 +316,9 @@ Network: Base Sepolia
 Connected Wallet: ${primaryWallet?.address || 'None'}
 GitHub Username: ${userGithubUsername || githubUsername || 'None'}
 Has Claimed: ${hasAlreadyClaimed !== null ? hasAlreadyClaimed.toString() : 'Unknown'}
-Eligible Tier: ${eligibilityInfo?.tier || 'Unknown'}
-Reward Amount: ${eligibilityInfo ? (Number(eligibilityInfo.amount) / 10 ** 18).toString() : 'Unknown'} tokens`}
+Eligible Tier: ${eligibilityInfo?.eligibleTier || 'Unknown'}
+Quality Score: ${eligibilityInfo?.qualityScore || 'Unknown'}
+Last Updated: ${eligibilityInfo?.lastUpdated ? new Date(eligibilityInfo.lastUpdated * 1000).toLocaleString() : 'Unknown'}`}
           </pre>
         </details>
       )}

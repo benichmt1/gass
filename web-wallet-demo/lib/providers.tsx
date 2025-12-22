@@ -101,7 +101,7 @@ export default function Providers({
                 vanityName: "Base Sepolia",
                 rpcUrls: ["https://84532.rpc.thirdweb.com"],
                 blockExplorerUrls: ["https://sepolia-explorer.base.org"],
-                iconUrls: ["https://sepolia.base.org/favicon.svg"],
+                iconUrls: ["https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"],
                 nativeCurrency: {
                   name: "Sepolia Ether",
                   symbol: "ETH",

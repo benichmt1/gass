@@ -65,12 +65,13 @@ export function useDynamicAuth() {
     null;
 
   return {
-    isAuthenticated: !!session || isAuthenticated,
+    isAuthenticated: !!session || isAuthenticated || !!primaryWallet,
     isLoading: isLoading || status === 'loading',
     error,
     user: session?.user || user,
     githubUsername,
     walletAddress,
-    jwt: session?.jwt || authToken
+    jwt: session?.jwt || authToken,
+    primaryWallet: primaryWallet // Return primaryWallet from Dynamic context
   };
 }

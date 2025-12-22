@@ -20,12 +20,14 @@ import {
 import { useDynamicAuth } from '@/lib/useDynamicAuth';
 import { useToggles } from '@/app/components/HeaderToggles';
 import './Methods.css'; // Reusing the same styles
+import { Check, Circle, AlertTriangle, Trophy, XCircle, Star } from 'lucide-react';
 
 interface GithubUserInfoProps {
   isDarkMode: boolean;
+  column?: 'left' | 'right';
 }
 
-export default function GithubUserInfo({ isDarkMode }: GithubUserInfoProps) {
+export default function GithubUserInfo({ isDarkMode, column }: GithubUserInfoProps) {
   // Use our custom hook for Dynamic and NextAuth integration
   const {
     isAuthenticated,
@@ -615,202 +617,162 @@ Error: ${error?.message || 'Unknown error'}`);
     }
   };
 
+  // Determine which sections to render based on column prop
+  const showLeftContent = !column || column === 'left';
+  const showRightContent = !column || column === 'right';
+
   return (
     <div className="gass-user-info">
-      {/* Section: Account Info */}
-      <div className="gass-section">
-        <div className="gass-section-title">Account Information</div>
-        <div className="gass-info-grid">
-          <div className="gass-info-item">
-            <span className="gass-info-label">GitHub Username</span>
-            <span className="gass-info-value">{githubUsername || 'Not connected'}</span>
+      {/* LEFT COLUMN CONTENT: Account Info, Status, Actions, Alerts */}
+      {showLeftContent && (
+        <>
+          <div className="gass-section">
+            <div className="gass-section-title">Account Information</div>
+            <div className="gass-info-grid">
+              <div className="gass-info-item">
+                <span className="gass-info-label">GitHub Username</span>
+                <span className="gass-info-value">{githubUsername || 'Not connected'}</span>
+              </div>
+              {primaryWallet && (
+                <div className="gass-info-item">
+                  <span className="gass-info-label">Wallet Address</span>
+                  <span className="gass-info-value">{primaryWallet.address?.substring(0, 6)}...{primaryWallet.address?.substring(primaryWallet.address.length - 4)}</span>
+                </div>
+              )}
+              <div className="gass-info-item">
+                <span className="gass-info-label">Network</span>
+                <span className="gass-info-value">Base Sepolia Testnet</span>
+              </div>
+            </div>
           </div>
-          {primaryWallet && (
-            <div className="gass-info-item">
-              <span className="gass-info-label">Wallet Address</span>
-              <span className="gass-info-value">{primaryWallet.address?.substring(0, 6)}...{primaryWallet.address?.substring(primaryWallet.address.length - 4)}</span>
+
+          {/* Section: Status */}
+          <div className="gass-section">
+            <div className="gass-section-title">Connection Status</div>
+            <div className="gass-badges">
+              <div className={`gass-badge ${user ? 'gass-badge-success' : 'gass-badge-error'}`}>
+                <span className="gass-badge-icon">{user ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}</span>
+                {user ? 'Authenticated' : 'Not Authenticated'}
+              </div>
+              <div className={`gass-badge ${primaryWallet ? 'gass-badge-success' : 'gass-badge-warning'}`}>
+                <span className="gass-badge-icon">{primaryWallet ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}</span>
+                {primaryWallet ? 'Wallet Connected' : 'No Wallet'}
+              </div>
+              <div className={`gass-badge ${verificationResult?.isVerified ? 'gass-badge-success' : 'gass-badge-info'}`}>
+                <span className="gass-badge-icon">{verificationResult?.isVerified ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}</span>
+                {verificationResult?.isVerified ? 'GitHub Verified' : 'Verification Required'}
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="gass-action-buttons">
+            {/* Verification proof button - show if user is authenticated */}
+            {user && !simulationMode && (
+              <button
+                className="gass-button gass-button-secondary"
+                onClick={generateProof}
+                disabled={isGeneratingProof}
+              >
+                {isGeneratingProof ? 'Generating...' : (verificationProof ? 'Regenerate Verification Proof' : 'Generate Verification Proof')}
+              </button>
+            )}
+
+            {/* Check eligibility button */}
+            <button
+              className="gass-button gass-button-primary"
+              onClick={checkRewardsEligibility}
+              disabled={loading || (!verificationResult?.isVerified && !simulationMode)}
+            >
+              {loading ? 'Checking...' : 'Check Rewards'}
+            </button>
+          </div>
+
+          {/* Primary Status Message Area */}
+          <div className="gass-section">
+            {errorMessage && (
+              <div className="gass-alert gass-alert-error">
+                <span className="gass-alert-icon"><AlertTriangle className="w-4 h-4" /></span>
+                {errorMessage}
+              </div>
+            )}
+
+            {alreadyReceived && !rewardProcessed && (
+              <div className="gass-alert gass-alert-success">
+                <span className="gass-alert-icon"><Trophy className="w-4 h-4" /></span>
+                You have already received your rewards!
+              </div>
+            )}
+
+            {rewardProcessed && (
+              <div className="gass-alert gass-alert-success">
+                <span className="gass-alert-icon"><Trophy className="w-4 h-4" /></span>
+                Rewards successfully processed!
+              </div>
+            )}
+
+            {!alreadyReceived && !rewardProcessed && isEligibleForRewards !== null && (
+              <div className={`gass-alert ${isEligibleForRewards ? 'gass-alert-success' : 'gass-alert-error'}`}>
+                <span className="gass-alert-icon">{isEligibleForRewards ? <Check className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}</span>
+                {isEligibleForRewards && eligibilityResult
+                  ? `Eligible for ${eligibilityResult.eligibleTier} tier rewards!`
+                  : 'Not eligible for onchain rewards.'}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* RIGHT COLUMN CONTENT: Tiers, Claim Button */}
+      {showRightContent && (
+        <>
+          {/* Tier Information */}
+          {eligibilityResult && !loading && !alreadyReceived && !rewardProcessed && (
+            <div className="gass-tier-section">
+              <div className="gass-tier-section-title">Reward Tiers</div>
+              <div className="gass-tier-grid">
+                <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.LIMITED ? 'featured' : 'dimmed'}`}>
+                  <div className="gass-tier-card-title">Limited Tier</div>
+                  <div className={`gass-tier-card-icon ${eligibilityResult.eligibleTier === RewardTier.LIMITED ? '' : ''}`}>
+                    {eligibilityResult.eligibleTier === RewardTier.LIMITED ? <Star className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
+                  </div>
+                  <div className="gass-tier-card-description">No contribution in 30+ days</div>
+                </div>
+                <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.STANDARD ? 'featured' : 'dimmed'}`}>
+                  <div className="gass-tier-card-title">Standard Tier</div>
+                  <div className={`gass-tier-card-icon ${eligibilityResult.eligibleTier === RewardTier.STANDARD ? '' : ''}`}>
+                    {eligibilityResult.eligibleTier === RewardTier.STANDARD ? <Star className="w-6 h-6 text-yellow-400" /> : <Circle className="w-6 h-6" />}
+                  </div>
+                  <div className="gass-tier-card-description">Recent activity, ≤ 100 Reviews</div>
+                </div>
+                <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.BONUS ? 'featured' : 'dimmed'}`}>
+                  <div className="gass-tier-card-title">Bonus Tier</div>
+                  <div className={`gass-tier-card-icon ${eligibilityResult.eligibleTier === RewardTier.BONUS ? '' : ''}`}>
+                    {eligibilityResult.eligibleTier === RewardTier.BONUS ? <Trophy className="w-6 h-6 text-yellow-400" /> : <Circle className="w-6 h-6" />}
+                  </div>
+                  <div className="gass-tier-card-description">Recent activity, &gt; 100 Reviews</div>
+                </div>
+              </div>
             </div>
           )}
-          <div className="gass-info-item">
-            <span className="gass-info-label">Network</span>
-            <span className="gass-info-value">Base Sepolia Testnet</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Section: Status */}
-      <div className="gass-section">
-        <div className="gass-section-title">Connection Status</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <div
-            style={{
-              padding: '0.625rem 1rem',
-              borderRadius: '100px',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              border: '1px solid',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              ...(user ? {
-                background: 'rgba(52, 199, 89, 0.12)',
-                borderColor: 'rgba(52, 199, 89, 0.25)',
-                color: '#34C759'
-              } : {
-                background: 'rgba(255, 59, 48, 0.12)',
-                borderColor: 'rgba(255, 59, 48, 0.25)',
-                color: '#FF3B30'
-              })
-            }}
-          >
-            <span style={{ fontSize: '1rem' }}>{user ? '✓' : '○'}</span>
-            {user ? 'Authenticated' : 'Not Authenticated'}
-          </div>
-          <div
-            style={{
-              padding: '0.625rem 1rem',
-              borderRadius: '100px',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              border: '1px solid',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              ...(primaryWallet ? {
-                background: 'rgba(52, 199, 89, 0.12)',
-                borderColor: 'rgba(52, 199, 89, 0.25)',
-                color: '#34C759'
-              } : {
-                background: 'rgba(255, 149, 0, 0.12)',
-                borderColor: 'rgba(255, 149, 0, 0.25)',
-                color: '#FF9500'
-              })
-            }}
-          >
-            <span style={{ fontSize: '1rem' }}>{primaryWallet ? '✓' : '○'}</span>
-            {primaryWallet ? 'Wallet Connected' : 'No Wallet'}
-          </div>
-          <div
-            style={{
-              padding: '0.625rem 1rem',
-              borderRadius: '100px',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              border: '1px solid',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              ...(verificationResult?.isVerified ? {
-                background: 'rgba(52, 199, 89, 0.12)',
-                borderColor: 'rgba(52, 199, 89, 0.25)',
-                color: '#34C759'
-              } : {
-                background: 'rgba(0, 122, 255, 0.12)',
-                borderColor: 'rgba(0, 122, 255, 0.25)',
-                color: '#007AFF'
-              })
-            }}
-          >
-            <span style={{ fontSize: '1rem' }}>{verificationResult?.isVerified ? '✓' : '○'}</span>
-            {verificationResult?.isVerified ? 'GitHub Verified' : 'Verification Required'}
-          </div>
-        </div>
-      </div>
-
-      {/* Action buttons */}
-      <div className="gass-action-buttons">
-        {/* Verification proof button - show if user is authenticated */}
-        {user && !simulationMode && (
-          <button
-            className="gass-button gass-button-secondary"
-            onClick={generateProof}
-            disabled={isGeneratingProof}
-          >
-            {isGeneratingProof ? 'Generating...' : (verificationProof ? 'Regenerate Verification Proof' : 'Generate Verification Proof')}
-          </button>
-        )}
-
-        {/* Check eligibility button */}
-        <button
-          className="gass-button gass-button-primary"
-          onClick={checkRewardsEligibility}
-          disabled={loading || (!verificationResult?.isVerified && !simulationMode)}
-        >
-          {loading ? 'Checking...' : 'Check Rewards'}
-        </button>
-      </div>
-
-      {/* Primary Status Message Area - Centralized feedback */}
-      <div className="my-6">
-        {errorMessage && (
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 mb-4">
-            {errorMessage}
-          </div>
-        )}
-
-        {alreadyReceived && !rewardProcessed && (
-          <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 mb-4">
-            🎉 You have already received your rewards!
-          </div>
-        )}
-
-        {rewardProcessed && (
-          <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 mb-4">
-            🎉 Rewards successfully processed!
-          </div>
-        )}
-
-        {!alreadyReceived && !rewardProcessed && isEligibleForRewards !== null && (
-          <div className={`p-4 rounded-xl border mb-4 ${isEligibleForRewards ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
-            {isEligibleForRewards && eligibilityResult
-              ? `Eligible for ${eligibilityResult.eligibleTier} tier rewards!`
-              : 'Not eligible for onchain rewards.'}
-          </div>
-        )}
-      </div>
-
-      {/* Tier Information */}
-      {eligibilityResult && !loading && !alreadyReceived && !rewardProcessed && (
-        <div className="gass-tier-section animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <h4 className="text-lg font-semibold mb-4 text-primary">Reward Tiers</h4>
-          <div className="gass-tier-grid">
-            <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.LIMITED ? 'eligible' : 'not-eligible'}`}>
-              <div className="gass-tier-card-title">Limited Tier</div>
-              <div className="text-4xl my-4">{eligibilityResult.eligibleTier === RewardTier.LIMITED ? '✨' : '⚪'}</div>
-              <div className="gass-tier-card-description">No contribution in 30+ days</div>
+          {/* Claim Button */}
+          {isEligibleForRewards && !alreadyReceived && !rewardProcessed && (
+            <div className="gass-claim-cta">
+              <button
+                className="gass-button-claim"
+                onClick={handleProcessReward}
+                disabled={processingReward}
+              >
+                {processingReward ? 'Processing...' : 'Claim Your Rewards'}
+              </button>
             </div>
-            <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.STANDARD ? 'eligible' : 'not-eligible'}`}>
-              <div className="gass-tier-card-title">Standard Tier</div>
-              <div className="text-4xl my-4">{eligibilityResult.eligibleTier === RewardTier.STANDARD ? '🌟' : '⚪'}</div>
-              <div className="gass-tier-card-description">Recent activity, ≤ 100 Reviews</div>
-            </div>
-            <div className={`gass-tier-card ${eligibilityResult.eligibleTier === RewardTier.BONUS ? 'eligible' : 'not-eligible'}`}>
-              <div className="gass-tier-card-title">Bonus Tier</div>
-              <div className="text-4xl my-4">{eligibilityResult.eligibleTier === RewardTier.BONUS ? '🏆' : '⚪'}</div>
-              <div className="gass-tier-card-description">Recent activity, &gt; 100 Reviews</div>
-            </div>
-          </div>
-          <p className="gass-tier-note mt-6 text-sm opacity-60 text-center">
-            Note: All tiers require a quality score &gt; 50. Ineligible users are not shown a tier.
-          </p>
-        </div>
+          )}
+        </>
       )}
 
-      {/* Claim Button */}
-      {isEligibleForRewards && !alreadyReceived && !rewardProcessed && (
-        <div className="flex justify-center mt-8">
-          <button
-            className="gass-button gass-button-primary text-lg px-8 py-3"
-            onClick={handleProcessReward}
-            disabled={processingReward}
-          >
-            {processingReward ? 'Processing...' : 'Claim Rewards'}
-          </button>
-        </div>
-      )}
-
-      {/* Debug information - Collapsible */}
-      {(debugMode && (contractCallInfo || debugInfo)) && (
+      {/* Debug information - Show in left column only */}
+      {showLeftContent && (debugMode && (contractCallInfo || debugInfo)) && (
         <details className="mt-8 p-4 rounded-xl bg-black/20 border border-white/10">
           <summary className="cursor-pointer font-medium opacity-70 hover:opacity-100">Development Details</summary>
           {contractCallInfo && (
@@ -830,3 +792,4 @@ Error: ${error?.message || 'Unknown error'}`);
     </div>
   );
 }
+
