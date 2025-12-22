@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDynamicContext, useEmbeddedWallet } from '@dynamic-labs/sdk-react-core';
 import { useToggles } from '@/app/components/HeaderToggles';
 import safeStorage from '@/lib/safeStorage';
+import { Check, Info, XCircle } from 'lucide-react';
 
 export default function EmbeddedWalletManager() {
   const { primaryWallet, user } = useDynamicContext();
@@ -14,7 +15,6 @@ export default function EmbeddedWalletManager() {
 
   // Use the embedded wallet hook from Dynamic
   const {
-    createAccount,
     embeddedWallet,
     getNetworkInfo,
     switchNetwork,
@@ -23,7 +23,7 @@ export default function EmbeddedWalletManager() {
   // Function to check if a wallet is an embedded wallet
   const isEmbeddedWallet = (wallet: any) => {
     return wallet?.connector?.name === 'embeddedWallet' ||
-           wallet?.connector?.connectorType === 'embeddedWallet';
+      wallet?.connector?.connectorType === 'embeddedWallet';
   };
 
   // Base Sepolia chain ID
@@ -145,7 +145,7 @@ export default function EmbeddedWalletManager() {
     <div className="gass-embedded-wallet-manager">
       {message && (
         <div className={`gass-status ${message.includes('Base Sepolia') ? 'gass-status-success' : 'gass-status-info'}`}>
-          <span className="gass-status-icon">{message.includes('Base Sepolia') ? '✅' : 'ℹ️'}</span>
+          <span className="gass-status-icon">{message.includes('Base Sepolia') ? <Check className="w-4 h-4" /> : <Info className="w-4 h-4" />}</span>
           <span>{message}</span>
 
           {!message.includes('Base Sepolia') && isEmbeddedWallet(primaryWallet) && (
@@ -162,7 +162,7 @@ export default function EmbeddedWalletManager() {
 
       {error && (
         <div className="gass-status gass-status-error">
-          <span className="gass-status-icon">❌</span>
+          <span className="gass-status-icon"><XCircle className="w-4 h-4" /></span>
           <span>{error}</span>
         </div>
       )}
