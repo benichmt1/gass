@@ -2,7 +2,7 @@ import { createPublicClient, createWalletClient, http, type Address, type Hex } 
 import { baseSepolia } from 'viem/chains';
 
 // GASS Contract address on Base Sepolia
-export const GASS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_GASS_CONTRACT_ADDRESS || '0x171A95CE45025f0AE0e56eC67Bf7084117e335d8';
+export const GASS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_GASS_CONTRACT_ADDRESS || '0xca37c2c3f5e1922796d24c2494f863f0f8d4434d';
 
 // O2 Oracle address on Base Sepolia
 export const O2_ORACLE_ADDRESS = process.env.NEXT_PUBLIC_O2_ORACLE_ADDRESS || '0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2';

@@ -12,8 +12,12 @@ contract GASS_UpdatedScript is Script {
     function run() public {
         vm.startBroadcast();
 
+        // Get trusted signer from env
+        address trustedSigner = vm.envAddress("ADMIN_PUBLIC_KEY");
+        console.log("Deploying with trusted signer:", trustedSigner);
+
         // Deploy the updated contract
-        gassContract = new GASS_Updated();
+        gassContract = new GASS_Updated(trustedSigner);
 
         // Log the contract address
         console.log("GASS_Updated (Github Activity Scoring System with Verification) deployed at:", address(gassContract));
