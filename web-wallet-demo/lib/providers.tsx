@@ -1,6 +1,7 @@
 'use client';
 
-import { DynamicContextProvider, SocialSignInProviderEnum } from "@dynamic-labs/sdk-react-core";
+import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
+import { SocialSignInProviderEnum } from "@dynamic-labs/sdk-api-core";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 // import { ZeroDevSmartWalletConnectors } from "@dynamic-labs/ethereum-aa"; // Commented out for MetaMask focus
 import { TogglesProvider } from "@/app/components/HeaderToggles";
