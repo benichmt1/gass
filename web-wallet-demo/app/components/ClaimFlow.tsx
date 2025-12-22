@@ -511,7 +511,7 @@ export default function ClaimFlow() {
                                         <div className="gass-action-bar-content">
                                             <h3 className="gass-action-bar-title">Check Your Eligibility</h3>
                                             <p className="gass-action-bar-description">
-                                                Your accounts are connected. Let's analyze your GitHub contributions to determine your reward tier.
+                                                Your accounts are connected. Let&apos;s analyze your GitHub contributions to determine your reward tier.
                                             </p>
                                         </div>
                                         <button onClick={checkEligibility} className="gass-wizard-cta">
@@ -551,7 +551,7 @@ export default function ClaimFlow() {
                                                 <div className="gass-result-card-header">
                                                     <span className="gass-result-card-icon"><Trophy className="w-8 h-8 text-yellow-500" /></span>
                                                     <div>
-                                                        <div className="gass-result-card-title">You're Eligible!</div>
+                                                        <div className="gass-result-card-title">You&apos;re Eligible!</div>
                                                         <p className="text-white/60 text-sm">
                                                             Your contributions qualify for the <strong>{eligibilityResult.eligibleTier}</strong> tier.
                                                         </p>
