@@ -1,27 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useDynamicContext, useEmbeddedWallet } from '@dynamic-labs/sdk-react-core';
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useToggles } from '@/app/components/HeaderToggles';
 import safeStorage from '@/lib/safeStorage';
 import { Check, Info, XCircle } from 'lucide-react';
 
 export default function EmbeddedWalletManager() {
-  const { primaryWallet, user } = useDynamicContext();
+  const { primaryWallet } = useDynamicContext();
   const { debugMode } = useToggles();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // Use the embedded wallet hook from Dynamic
-  const {
-    getNetworkInfo,
-    switchNetwork,
-  } = useEmbeddedWallet();
-
   // Function to check if a wallet is an embedded wallet
   const isEmbeddedWallet = (wallet: any) => {
-    return wallet?.connector?.name === 'embeddedWallet' ||
+    return wallet?.connector?.key === 'embeddedWallet' ||
+      wallet?.connector?.name === 'embeddedWallet' ||
       wallet?.connector?.connectorType === 'embeddedWallet';
   };
 
@@ -44,48 +39,49 @@ export default function EmbeddedWalletManager() {
           // Check if we have a cached network ID in our safe storage
           const cachedChainId = safeStorage.get('embeddedWalletChainId', null);
 
-          // Try to get the current network info, but handle errors gracefully
-          let networkInfo;
-          try {
-            networkInfo = await getNetworkInfo();
-          } catch (networkErr) {
-            console.warn('Error getting network info, using cached value:', networkErr);
+          // Try to get chain ID from wallet
+          let chainId: number | undefined;
 
-            // If we have a cached value, use that instead
+          try {
+            if (primaryWallet.connector && 'getNetwork' in primaryWallet.connector) {
+              const network = await (primaryWallet.connector as any).getNetwork();
+              chainId = network;
+            } else {
+              const client = await primaryWallet.getWalletClient();
+              chainId = await client.getChainId();
+            }
+          } catch (err) {
+            console.warn('Error fetching chain ID:', err);
+            // Fallback to cache
             if (cachedChainId !== null) {
-              networkInfo = { chainId: cachedChainId };
+              chainId = parseInt(cachedChainId);
             }
           }
 
-          if (networkInfo?.chainId === baseSepolia) {
+          if (chainId === baseSepolia) {
             setMessage('Embedded wallet is on Base Sepolia');
             // Cache the chain ID for future use
             safeStorage.set('embeddedWalletChainId', baseSepolia);
           } else {
-            setMessage(`Embedded wallet is on chain ID: ${networkInfo?.chainId || 'Unknown'} (Not Base Sepolia)`);
+            setMessage(`Embedded wallet is on chain ID: ${chainId || 'Unknown'} (Not Base Sepolia)`);
 
-            // Try to switch to Base Sepolia
-            handleSwitchNetwork();
+            // Auto-switch if possible
+            // handleSwitchNetwork(); // Disabled specific auto-switch to avoid infinite loops if it fails
           }
         } catch (err) {
           console.error('Error checking embedded wallet network:', err);
-          // Only show error to user if it's not a storage-related issue
-          if (!String(err).includes('storage') && !String(err).includes('localStorage')) {
-            setError(err instanceof Error ? err.message : 'Unknown error checking embedded wallet');
-          }
         }
       } else {
         setMessage('Not using an embedded wallet');
       }
     };
 
-    // Small delay to ensure Dynamic SDK is fully initialized
     const timer = setTimeout(() => {
       checkEmbeddedWallet();
-    }, 500);
+    }, 1000);
 
     return () => clearTimeout(timer);
-  }, [primaryWallet, getNetworkInfo]);
+  }, [primaryWallet]);
 
   // Function to switch the embedded wallet to Base Sepolia
   const handleSwitchNetwork = async () => {
@@ -98,37 +94,21 @@ export default function EmbeddedWalletManager() {
     setError(null);
 
     try {
-      // Try to switch to Base Sepolia with error handling
-      try {
-        await switchNetwork(baseSepolia);
-        setMessage('Successfully switched embedded wallet to Base Sepolia');
-
-        // Cache the successful chain ID
-        safeStorage.set('embeddedWalletChainId', baseSepolia);
-      } catch (switchErr) {
-        console.warn('Error using switchNetwork, trying alternative method:', switchErr);
-
-        // If the first method fails, try an alternative approach
-        try {
-          // Try to use the wallet's switchChain method directly if available
-          if (primaryWallet.connector && primaryWallet.connector.switchChain) {
-            await primaryWallet.connector.switchChain({ chainId: baseSepolia });
-            setMessage('Successfully switched embedded wallet to Base Sepolia (alternative method)');
-            safeStorage.set('embeddedWalletChainId', baseSepolia);
-          } else {
-            throw new Error('Wallet does not support chain switching');
-          }
-        } catch (altErr) {
-          // If both methods fail, throw the error to be caught by the outer catch
-          console.error('Alternative method also failed:', altErr);
-          throw altErr;
-        }
+      if (primaryWallet.switchNetwork) {
+        await primaryWallet.switchNetwork(baseSepolia);
+      } else if (primaryWallet.connector && (primaryWallet.connector as any).switchChain) {
+        await (primaryWallet.connector as any).switchChain({ chainId: baseSepolia });
+      } else {
+        throw new Error('Wallet does not support network switching');
       }
-    } catch (err) {
+
+      setMessage('Successfully switched embedded wallet to Base Sepolia');
+      safeStorage.set('embeddedWalletChainId', baseSepolia);
+    } catch (err: any) {
       console.error('Failed to switch embedded wallet network:', err);
       // Only show error to user if it's not a storage-related issue
       if (!String(err).includes('storage') && !String(err).includes('localStorage')) {
-        setError('Failed to switch to Base Sepolia. Please try again.');
+        setError(err.message || 'Failed to switch to Base Sepolia. Please try again.');
       }
     } finally {
       setIsLoading(false);

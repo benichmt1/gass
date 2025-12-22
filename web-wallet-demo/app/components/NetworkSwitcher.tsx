@@ -9,10 +9,7 @@ import { Check, AlertTriangle, XCircle } from 'lucide-react';
 export default function NetworkSwitcher() {
   const {
     network,
-    setNetwork,
-    primaryWallet,
-    networkConfigurations,
-    evmNetworks
+    primaryWallet
   } = useDynamicContext();
 
   const { debugMode } = useToggles();
@@ -30,44 +27,26 @@ export default function NetworkSwitcher() {
       if (!primaryWallet) return;
 
       try {
-        // Try to get the wallet client, but handle any errors that might occur
-        let walletClient;
-        try {
-          walletClient = await primaryWallet.connector.getWalletClient();
-        } catch (clientErr) {
-          console.warn('Could not get wallet client:', clientErr);
-          // Continue with other operations even if this fails
+        // Try to get chain ID from wallet
+        let chainId: number | undefined;
+
+        if (primaryWallet.connector && 'getNetwork' in primaryWallet.connector) {
+          const networkVal = await (primaryWallet.connector as any).getNetwork();
+          chainId = networkVal;
+        } else {
+          const client = await primaryWallet.getWalletClient();
+          chainId = await client.getChainId();
         }
 
-        // If we couldn't get a wallet client, try to use the network from context
-        if (!walletClient) {
-          console.log('Using network from context:', network);
-          // If we have a network from context, use that
-          if (network) {
-            const networkChainId = parseInt(network);
-            if (!isNaN(networkChainId)) {
-              setCurrentChainId(networkChainId);
-              return;
-            }
-          }
-          return;
-        }
-
-        // Try to get chain ID from wallet client
-        let chainId;
-        try {
-          chainId = await walletClient.getChainId();
+        if (typeof chainId === 'number') {
           setCurrentChainId(chainId);
-        } catch (chainErr) {
-          console.warn('Could not get chain ID from wallet:', chainErr);
-          // If we can't get the chain ID, don't try to switch networks
-          return;
+
+          // If not on Base Sepolia, try to switch
+          if (chainId !== baseSepolia) {
+            // handleSwitchToBaseSepolia(); // Disabled automatic switch to avoid loop
+          }
         }
 
-        // If not on Base Sepolia, try to switch
-        if (chainId !== baseSepolia) {
-          handleSwitchToBaseSepolia();
-        }
       } catch (err) {
         console.error('Error checking network:', err);
         // Only set user-facing errors for non-storage issues
@@ -99,28 +78,14 @@ export default function NetworkSwitcher() {
     setError(null);
 
     try {
-      // Use Dynamic's setNetwork function to switch networks
-      // Wrap in try/catch to handle any potential errors
-      try {
-        await setNetwork(baseSepolia.toString());
+      if (primaryWallet.switchNetwork) {
+        await primaryWallet.switchNetwork(baseSepolia);
         setCurrentChainId(baseSepolia);
-      } catch (networkErr) {
-        console.warn('Error using setNetwork, trying alternative method:', networkErr);
-
-        // If setNetwork fails, try using the wallet's switchChain method directly
-        try {
-          const walletClient = await primaryWallet.connector.getWalletClient();
-          if (walletClient && walletClient.switchChain) {
-            await walletClient.switchChain({ chainId: baseSepolia });
-            setCurrentChainId(baseSepolia);
-          } else {
-            throw new Error('Wallet does not support chain switching');
-          }
-        } catch (switchErr) {
-          // If both methods fail, throw the error to be caught by the outer catch
-          console.error('Alternative method also failed:', switchErr);
-          throw switchErr;
-        }
+      } else if (primaryWallet.connector && (primaryWallet.connector as any).switchChain) {
+        await (primaryWallet.connector as any).switchChain({ chainId: baseSepolia });
+        setCurrentChainId(baseSepolia);
+      } else {
+        throw new Error('Wallet does not support network switching');
       }
     } catch (err) {
       console.error('Failed to switch network:', err);
@@ -139,6 +104,11 @@ export default function NetworkSwitcher() {
   if (!primaryWallet) {
     return null;
   }
+
+  // Access check for debug info
+  const hasStorageAccess = typeof window !== 'undefined' && 'hasStorageAccess' in document
+    ? (document as any).hasStorageAccess
+    : false;
 
   return (
     <div className="gass-network-switcher">
@@ -175,12 +145,11 @@ export default function NetworkSwitcher() {
             {`Current Chain ID: ${currentChainId}
 Target Chain ID: ${baseSepolia}
 Dynamic Network: ${network}
-Available Networks: ${evmNetworks?.map(n => n.name).join(', ') || 'None'}
 Storage Type: ${safeStorage.getStorageType()}
 Storage Available: ${safeStorage.isAvailable()}
 localStorage Available: ${safeStorage.isAvailable('localStorage')}
 sessionStorage Available: ${safeStorage.isAvailable('sessionStorage')}
-Window Storage Access: ${typeof window !== 'undefined' && window.hasStorageAccess ? 'Yes' : 'No'}`}
+Window Storage Access: ${hasStorageAccess ? 'Yes' : 'No'}`}
           </pre>
         </div>
       )}
