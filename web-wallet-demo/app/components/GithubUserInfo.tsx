@@ -107,8 +107,8 @@ export default function GithubUserInfo({ isDarkMode, column }: GithubUserInfoPro
       });
 
       // Also set the JWT as the verification proof for testing
-      if (user.jwt) {
-        setVerificationProof(user.jwt);
+      if (authToken) {
+        setVerificationProof(authToken);
         setVerificationTimestamp(Math.floor(Date.now() / 1000));
       }
     }
