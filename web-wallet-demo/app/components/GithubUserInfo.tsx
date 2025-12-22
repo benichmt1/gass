@@ -550,8 +550,8 @@ Status: Confirmed`);
             primaryWallet.address as Address,
             parseEther('1'), // 1 token
             githubUsername,
-            verificationProof || undefined,
-            verificationTimestamp || undefined
+            (verificationProof as `0x${string}` | undefined),
+            verificationTimestamp ?? undefined
           );
 
           if (result.success) {
