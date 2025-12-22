@@ -3,7 +3,7 @@
  * for the GASS contract to ensure only verified users can claim rewards.
  */
 
-import { VerifiedCredential } from '@dynamic-labs/sdk-api';
+import { JwtVerifiedCredential } from '@dynamic-labs/sdk-api';
 import { ethers } from 'ethers';
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 
@@ -23,7 +23,7 @@ export interface VerificationResult {
  * @returns Object with verification status and message
  */
 export function verifyGithubCredential(
-  verifiedCredentials?: VerifiedCredential[]
+  verifiedCredentials?: JwtVerifiedCredential[]
 ): VerificationResult {
   if (!verifiedCredentials || verifiedCredentials.length === 0) {
     return {

@@ -7,7 +7,10 @@ import { signIn, useSession } from 'next-auth/react';
  * This hook will automatically sign in to NextAuth when the user logs in with Dynamic
  */
 export function useDynamicAuth() {
-  const { user, isAuthenticated, primaryWallet } = useDynamicContext();
+  const { user, primaryWallet } = useDynamicContext();
+
+  // Derive isAuthenticated from user and primaryWallet presence
+  const dynamicIsAuthenticated = !!user || !!primaryWallet;
 
   // Use try/catch to handle the case when SessionProvider is not available
   let session = null;
@@ -27,7 +30,7 @@ export function useDynamicAuth() {
   // Try to get JWT token from Dynamic
   useEffect(() => {
     const getToken = async () => {
-      if (primaryWallet && isAuthenticated) {
+      if (primaryWallet && dynamicIsAuthenticated) {
         try {
           // Try to get JWT from connector if available
           const connector = primaryWallet.connector;
@@ -41,12 +44,12 @@ export function useDynamicAuth() {
       }
     };
     getToken();
-  }, [primaryWallet, isAuthenticated]);
+  }, [primaryWallet, dynamicIsAuthenticated]);
 
   // Sign in to NextAuth when the user logs in with Dynamic
   useEffect(() => {
     const handleDynamicLogin = async () => {
-      if (isAuthenticated && authToken && !session) {
+      if (dynamicIsAuthenticated && authToken && !session) {
         setIsLoading(true);
         setError(null);
 
@@ -70,7 +73,7 @@ export function useDynamicAuth() {
     };
 
     handleDynamicLogin();
-  }, [isAuthenticated, authToken, session]);
+  }, [dynamicIsAuthenticated, authToken, session]);
 
   // Get GitHub username from Dynamic or NextAuth
   const githubUsername = (session as any)?.user?.githubUsername ||
@@ -85,7 +88,7 @@ export function useDynamicAuth() {
     null;
 
   return {
-    isAuthenticated: !!session || isAuthenticated || !!primaryWallet,
+    isAuthenticated: !!session || dynamicIsAuthenticated,
     isLoading: isLoading || status === 'loading',
     error,
     user: (session as any)?.user || user,
@@ -95,3 +98,4 @@ export function useDynamicAuth() {
     primaryWallet: primaryWallet // Return primaryWallet from Dynamic context
   };
 }
+
