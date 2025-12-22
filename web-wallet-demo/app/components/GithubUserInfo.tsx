@@ -452,7 +452,7 @@ ${result.error ? `Error: ${result.error}` : ''}`);
 
           setContractCallInfo(`FALLBACK SIMULATION: Contract call failed, showing simulated data.
 Quality Score: ${fallbackResult.qualityScore} (Threshold: > 50)
-Last Contribution: ${new Date(fallbackResult.lastUpdated * 1000).toLocaleDateString()} (Must be within last 30 days: ${new Date(1750000000 * 1000).toLocaleDateString()})
+Last Contribution: ${new Date((fallbackResult.lastUpdated || 0) * 1000).toLocaleDateString()} (Must be within last 30 days: ${new Date(1750000000 * 1000).toLocaleDateString()})
 Review Count: ${fallbackResult.reviewCount} (Threshold for Bonus: > 100)
 Eligible Tier: ${fallbackResult.eligibleTier}
 Error: ${fallbackResult.error}`);
