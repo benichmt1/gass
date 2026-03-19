@@ -32,8 +32,17 @@ contract GASS_Updated is RulesEngineClientCustom {
     }
 
     constructor(address _trustedSigner) {
+        require(_trustedSigner != address(0), "Zero signer");
         owner = msg.sender;
         trustedSigner = _trustedSigner;
+    }
+
+    function setRulesEngineAddress(address rulesEngine) public override onlyOwner {
+        rulesEngineAddress = rulesEngine;
+    }
+
+    function setCallingContractAdmin(address callingContractAdmin) external override onlyOwner {
+        IRulesEngine(rulesEngineAddress).grantCallingContractRole(address(this), callingContractAdmin);
     }
 
     // Mapping to track processed distributions

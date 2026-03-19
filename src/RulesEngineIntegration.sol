@@ -15,7 +15,7 @@ abstract contract RulesEngineClientCustom {
         rulesEngineAddress = rulesEngine;
     }
 
-    function setCallingContractAdmin(address callingContractAdmin) external {
+    function setCallingContractAdmin(address callingContractAdmin) external virtual {
         IRulesEngine(rulesEngineAddress).grantCallingContractRole(address(this), callingContractAdmin);
     }
 
