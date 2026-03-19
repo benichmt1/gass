@@ -19,7 +19,7 @@ GASS connects three key components to create a fair and transparent token distri
 2. **Smart Contract with Forte Rules Engine**: Applies token allocation policies based on the metrics from the O2 Oracle.
    - [Smart Contracts](/src/) and [Deployment Scripts](/script/)
    - [Distribution Policy](/o2_oracle_policy.json)
-   - Deployed at `0x171A95CE45025f0AE0e56eC67Bf7084117e335d8` on Base Sepolia
+   - Deployed at `0xF35C0460Df0678c21FE813971C5087B5fd03366A` on Base Sepolia
    - Uses policy rules to determine appropriate token distribution tiers
 
 3. **Web App with Dynamic Authentication**: Verifies that users claiming rewards are the authorized GitHub users, with built-in wallet functionality.
@@ -48,7 +48,7 @@ flowchart TD
 
     %% GASS Contract
     subgraph GASS["Smart Contract"]
-        GASSContract["GASS Token Distribution<br/>0x171A95CE45025f0AE0e56eC67Bf7084117e335d8"]
+        GASSContract["GASS Token Distribution<br/>0xF35C0460Df0678c21FE813971C5087B5fd03366A"]
     end
 
     %% Forte Rules Engine
@@ -87,7 +87,7 @@ flowchart TD
 
 1. **GitHub Activity Analysis**: The GitHub Action uses OpenRouter to analyze code reviews and contributions, then pushes metrics to the O2 Oracle:
    - Triggered automatically on pull requests
-   - Uses Claude 3 Opus via OpenRouter API to perform code quality analysis
+   - Uses claude-opus-4.5 via OpenRouter API to perform code quality analysis
    - Calculates a quality score (0-100) based on code review
    - Tracks metrics like last activity timestamp and contribution count
    - Stores all data in the O2 Oracle for on-chain access
@@ -147,13 +147,13 @@ jobs:
 
 The action will:
 1. Automatically fetch the PR diff.
-2. Send it to OpenRouter (Claude 3 Opus) for analysis.
+2. Send it to OpenRouter (claude-opus-4.5) for analysis.
 3. Calculate a quality score.
 4. Update the developer's metrics in the O2 Oracle.
 
 ### Smart Contract
 
-The GASS contract is deployed at `0x171A95CE45025f0AE0e56eC67Bf7084117e335d8` on Base Sepolia with Policy ID `69`. It uses the Forte Rules Engine to apply distribution rules based on O2 Oracle data.
+The GASS contract is deployed at `0xF35C0460Df0678c21FE813971C5087B5fd03366A` on Base Sepolia with Policy ID `6`. It uses the Forte Rules Engine to apply distribution rules based on O2 Oracle data.
 
 ### O2 Oracle
 
@@ -222,7 +222,8 @@ https://github.com/michael-bey/gass/raw/main/images/gass-demo-video.mp4
 ## Production Deployment
 
 The GASS system is deployed on Base Sepolia testnet:
-- **Smart Contract**: `0x171A95CE45025f0AE0e56eC67Bf7084117e335d8`
+- **Smart Contract**: `0xF35C0460Df0678c21FE813971C5087B5fd03366A`
+- **GASS Token**: `0x777E1Ad0Cfb52abbF5A5F70dB4382CC166d8DFf7`
 - **O2 Oracle**: `0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2`
-- **Forte Rules Engine**: `0x4E448907B4B8d5949D4A6C67f34419dBb29690bD`
-- **Block Explorer**: [View on BaseScan](https://sepolia.basescan.org/address/0x171A95CE45025f0AE0e56eC67Bf7084117e335d8)
+- **Forte Rules Engine**: `0x6189A916E3f190Bf3cE6247b7A0dE862d1De8387`
+- **Block Explorer**: [View on BaseScan](https://sepolia.basescan.org/address/0xF35C0460Df0678c21FE813971C5087B5fd03366A)
