@@ -5,10 +5,11 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 
 // Environment variable for the admin private key (trusted signer)
-// In a real app, this MUST be in .env.local and never committed
-// For this demo, we'll use a hardcoded private key if the env var is missing
-// This account needs to be the one set as 'trustedSigner' in the contract
-const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY as Hex || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'; // Anvil default account 0
+// This MUST be set in .env.local — this account must match 'trustedSigner' in the contract
+if (!process.env.ADMIN_PRIVATE_KEY) {
+    throw new Error('ADMIN_PRIVATE_KEY environment variable is required');
+}
+const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY as Hex;
 const account = privateKeyToAccount(ADMIN_PRIVATE_KEY);
 
 export async function POST(request: Request) {

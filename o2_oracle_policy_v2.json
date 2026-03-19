@@ -1,0 +1,77 @@
+{
+  "Policy": "GASS Token Distribution Policy",
+  "Description": "O2 Oracle policy for GASS — checks quality score, last updated, and review count before distributing tokens.",
+  "PolicyType": "open",
+  "CallingFunctions": [
+    {
+      "Name": "processReward",
+      "FunctionSignature": "processReward(address to, uint256 amount, string githubUsername)",
+      "EncodedValues": "address to, uint256 amount, string githubUsername"
+    }
+  ],
+  "ForeignCalls": [
+    {
+      "Name": "getQualityScore",
+      "Function": "getQuality_score(string)",
+      "Address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "ReturnType": "uint256",
+      "ValuesToPass": "githubUsername",
+      "MappedTrackerKeyValues": "",
+      "CallingFunction": "processReward"
+    },
+    {
+      "Name": "getLastUpdated",
+      "Function": "getLast_updated(string)",
+      "Address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "ReturnType": "uint256",
+      "ValuesToPass": "githubUsername",
+      "MappedTrackerKeyValues": "",
+      "CallingFunction": "processReward"
+    },
+    {
+      "Name": "getReviewCount",
+      "Function": "getReview_count(string)",
+      "Address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "ReturnType": "uint256",
+      "ValuesToPass": "githubUsername",
+      "MappedTrackerKeyValues": "",
+      "CallingFunction": "processReward"
+    }
+  ],
+  "Trackers": [],
+  "MappedTrackers": [],
+  "Rules": [
+    {
+      "Name": "RejectLowQuality",
+      "Description": "Reject if quality score is 50 or below.",
+      "Condition": "FC:getQualityScore <= 50",
+      "PositiveEffects": ["revert(\"Quality score too low\")"],
+      "NegativeEffects": [],
+      "CallingFunction": "processReward"
+    },
+    {
+      "Name": "LimitedDistribution",
+      "Description": "Half distribution for stale repos with good quality score.",
+      "Condition": "FC:getQualityScore > 50 AND FC:getLastUpdated < 1750000000",
+      "PositiveEffects": ["emit \"LimitedDistribution\""],
+      "NegativeEffects": [],
+      "CallingFunction": "processReward"
+    },
+    {
+      "Name": "BonusDistribution",
+      "Description": "Double distribution for active, high-review repos.",
+      "Condition": "FC:getQualityScore > 50 AND [FC:getLastUpdated >= 1750000000 AND FC:getReviewCount > 100]",
+      "PositiveEffects": ["emit \"BonusDistribution\""],
+      "NegativeEffects": [],
+      "CallingFunction": "processReward"
+    },
+    {
+      "Name": "StandardDistribution",
+      "Description": "Standard distribution for active repos with moderate reviews.",
+      "Condition": "FC:getQualityScore > 50 AND [FC:getLastUpdated >= 1750000000 AND FC:getReviewCount <= 100]",
+      "PositiveEffects": ["emit \"StandardDistribution\""],
+      "NegativeEffects": [],
+      "CallingFunction": "processReward"
+    }
+  ]
+}

@@ -92,8 +92,8 @@ export default function ClaimFlow() {
     // --- ACTIONS ---
 
     // 1. Generate Verification Proof
-    const generateProof = async () => {
-        if (!primaryWallet || !githubUsername) return;
+    const generateProof = async (): Promise<{ proof: string | null, timestamp: number | null }> => {
+        if (!primaryWallet || !githubUsername) return { proof: null, timestamp: null };
 
         setIsGeneratingProof(true);
         setError(null);
@@ -111,7 +111,7 @@ export default function ClaimFlow() {
                 setVerificationProof(simulatedProof);
                 setVerificationTimestamp(timestamp);
                 setIsGeneratingProof(false);
-                return;
+                return { proof: simulatedProof, timestamp };
             }
 
             const jwtResult = await getDynamicJwtToken();
@@ -120,19 +120,24 @@ export default function ClaimFlow() {
                 if (process.env.NODE_ENV === 'development') {
                     // Fallback for dev
                     const fallbackProof = `dev_fallback_token_${githubUsername}_${Date.now()}`;
+                    const timestamp = Math.floor(Date.now() / 1000);
                     setVerificationProof(fallbackProof);
-                    setVerificationTimestamp(Math.floor(Date.now() / 1000));
+                    setVerificationTimestamp(timestamp);
+                    return { proof: fallbackProof, timestamp };
                 } else {
                     throw new Error(jwtResult.message || 'Failed to get verification proof');
                 }
             } else {
+                const timestamp = jwtResult.timestamp || Math.floor(Date.now() / 1000);
                 setVerificationProof(jwtResult.proof);
-                setVerificationTimestamp(jwtResult.timestamp || Math.floor(Date.now() / 1000));
+                setVerificationTimestamp(timestamp);
+                return { proof: jwtResult.proof, timestamp };
             }
 
         } catch (err: any) {
             console.error("Proof generation error:", err);
             setError(err.message || 'Failed to generate proof');
+            return { proof: null, timestamp: null };
         } finally {
             setIsGeneratingProof(false);
         }
@@ -211,10 +216,16 @@ export default function ClaimFlow() {
         const effectiveSimulationMode = simulationMode || !hasStorageAccess;
 
         // Require proof if not simulation
-        if (!effectiveSimulationMode && (!verificationProof || !verificationTimestamp)) {
+        let currentProof = verificationProof;
+        let currentTimestamp = verificationTimestamp;
+
+        if (!effectiveSimulationMode && (!currentProof || !currentTimestamp)) {
             // Try to generate proof if missing
-            await generateProof();
-            if (!verificationProof) {
+            const result = await generateProof();
+            currentProof = result.proof;
+            currentTimestamp = result.timestamp;
+
+            if (!currentProof) {
                 setError("Verification proof required. Please try again.");
                 return;
             }
@@ -238,8 +249,8 @@ export default function ClaimFlow() {
                 const verificationResult = await verifyAndSignEligibility(
                     githubUsername,
                     primaryWallet.address as string,
-                    verificationProof as string,
-                    verificationTimestamp!
+                    currentProof as string,
+                    currentTimestamp!
                 );
 
                 if (!verificationResult.success || !verificationResult.signature) {
@@ -253,7 +264,7 @@ export default function ClaimFlow() {
                     verificationResult.amount || parseEther('1'),
                     githubUsername,
                     verificationResult.signature,
-                    verificationTimestamp!
+                    currentTimestamp!
                 );
 
                 if (result.success) {
@@ -649,6 +660,15 @@ export default function ClaimFlow() {
                                             <div className="bg-black/40 p-4 rounded-lg border border-white/10 mb-6 max-w-md mx-auto">
                                                 <div className="text-[10px] text-white/30 uppercase mb-1">Transaction Hash</div>
                                                 <div className="font-mono text-xs text-blue-400 break-all">{txHash}</div>
+                                                <a
+                                                    href={`https://sepolia.basescan.org/tx/${txHash}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="mt-2 inline-flex items-center gap-1 text-xs text-blue-400/70 hover:text-blue-400 transition-colors"
+                                                >
+                                                    <Globe className="w-3 h-3" />
+                                                    View on BaseScan →
+                                                </a>
                                             </div>
                                         )}
 

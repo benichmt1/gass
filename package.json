@@ -19,6 +19,8 @@
     "@actions/core": "^2.0.1",
     "@actions/exec": "^2.0.0",
     "@actions/github": "^6.0.1",
+    "@fortefoundation/forte-rules-engine": "^0.9.2",
+    "@fortefoundation/forte-rules-engine-sdk": "^0.20.2",
     "@thrackle-io/forte-rules-engine": "^0.0.1-rc.0",
     "@thrackle-io/forte-rules-engine-sdk": "0.0.3",
     "dotenv": "^16.5.0",

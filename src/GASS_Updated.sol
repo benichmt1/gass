@@ -20,11 +20,19 @@ contract GASS_Updated is RulesEngineClientCustom {
     // O2 Oracle address
     address public constant O2_ORACLE_ADDRESS = 0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2;
 
-    // Trusted Signer Address (Backend API Key)
+    // Owner address (deployer)
+    address public owner;
+
     // Trusted Signer Address (Backend API Key)
     address public trustedSigner;
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
     constructor(address _trustedSigner) {
+        owner = msg.sender;
         trustedSigner = _trustedSigner;
     }
 
@@ -91,10 +99,9 @@ contract GASS_Updated is RulesEngineClientCustom {
     }
 
     /**
-     * @dev Set the trusted signer address (Admin only - simplified for demo)
+     * @dev Set the trusted signer address (Owner only)
      */
-    function setTrustedSigner(address _signer) external {
-        // In production, add 'validAdmin' modifier
+    function setTrustedSigner(address _signer) external onlyOwner {
         trustedSigner = _signer;
     }
 

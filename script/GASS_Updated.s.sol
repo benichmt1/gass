@@ -23,7 +23,7 @@ contract GASS_UpdatedScript is Script {
         console.log("GASS_Updated (Github Activity Scoring System with Verification) deployed at:", address(gassContract));
 
         // Set the Rules Engine address
-        gassContract.setRulesEngineAddress(0x4E448907B4B8d5949D4A6C67f34419dBb29690bD);
+        gassContract.setRulesEngineAddress(0x6189A916E3f190Bf3cE6247b7A0dE862d1De8387);
         console.log("Rules Engine address set to:", gassContract.rulesEngineAddress());
 
         vm.stopBroadcast();
