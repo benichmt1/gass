@@ -19,17 +19,18 @@ const TogglesContext = createContext<TogglesContextType>({
 
 // Provider component for toggles
 export function TogglesProvider({ children }: { children: React.ReactNode }) {
-  // Try to get initial values from localStorage
-  const getInitialValue = (key: string): boolean => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : false;
-    }
-    return false;
-  };
+  const [debugMode, setDebugModeState] = useState<boolean>(false);
+  const [simulationMode, setSimulationModeState] = useState<boolean>(false);
 
-  const [debugMode, setDebugModeState] = useState<boolean>(getInitialValue('debugMode'));
-  const [simulationMode, setSimulationModeState] = useState<boolean>(getInitialValue('simulationMode'));
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedDebug = localStorage.getItem('debugMode');
+      if (storedDebug) setDebugModeState(JSON.parse(storedDebug));
+      
+      const storedSim = localStorage.getItem('simulationMode');
+      if (storedSim) setSimulationModeState(JSON.parse(storedSim));
+    }
+  }, []);
 
   // Update localStorage when values change
   const setDebugMode = (value: boolean) => {

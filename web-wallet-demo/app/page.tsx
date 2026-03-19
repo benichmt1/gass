@@ -28,39 +28,33 @@ export default function Main() {
           <span className="gass-navbar-badge">ETHCC 2026</span>
         </div>
         <div className="gass-navbar-controls">
-          <ClientOnly>
-            <ThemeToggle />
-            <HeaderToggles />
-          </ClientOnly>
+          <ThemeToggle />
+          <HeaderToggles />
         </div>
       </nav>
 
       <div className="gass-card">
         {/* Main Claim Flow - Centered Wizard */}
         <div className="w-full flex justify-center">
-          <ClientOnly>
-            <ClaimFlow />
-          </ClientOnly>
+          <ClaimFlow />
         </div>
 
         {/* Debug / Advanced Section - Only visible in debug mode or if needed */}
         {/* We keep SmartWalletInfo for specialized network switching or debug info if needed via toggle */}
-        <ClientOnly>
-          {debugMode && (
-            <div className="mt-8 pt-4 border-t border-white/5 opacity-70">
-              <details className="group">
-                <summary className="flex items-center justify-center gap-2 text-[10px] uppercase font-bold text-white/30 cursor-pointer hover:text-white/60 transition-colors py-2">
-                  <span>Developer Controls</span>
-                  <span className="group-open:rotate-180 transition-transform"><ChevronDown className="w-3 h-3" /></span>
-                </summary>
-                <div className="mt-4 gass-debug-grid animate-fadeIn p-4 bg-black/40 rounded-xl border border-white/5">
-                  <SmartWalletInfo />
-                  <DynamicMethods isDarkMode={isDarkMode} />
-                </div>
-              </details>
-            </div>
-          )}
-        </ClientOnly>
+        {debugMode && (
+          <div className="mt-8 pt-4 border-t border-white/5 opacity-70">
+            <details className="group">
+              <summary className="flex items-center justify-center gap-2 text-[10px] uppercase font-bold text-white/30 cursor-pointer hover:text-white/60 transition-colors py-2">
+                <span>Developer Controls</span>
+                <span className="group-open:rotate-180 transition-transform"><ChevronDown className="w-3 h-3" /></span>
+              </summary>
+              <div className="mt-4 gass-debug-grid animate-fadeIn p-4 bg-black/40 rounded-xl border border-white/5">
+                <SmartWalletInfo />
+                <DynamicMethods isDarkMode={isDarkMode} />
+              </div>
+            </details>
+          </div>
+        )}
       </div>
 
       <div className="gass-footer">

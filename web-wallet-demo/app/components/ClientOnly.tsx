@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export default function ClientOnly({ children }: { children: React.ReactNode }) {
+export default function ClientOnly({ children, fallback = null }: { children: React.ReactNode, fallback?: React.ReactNode }) {
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -10,7 +10,7 @@ export default function ClientOnly({ children }: { children: React.ReactNode }) 
   }, []);
 
   if (!hasMounted) {
-    return null;
+    return fallback as React.ReactElement | null;
   }
 
   return <>{children}</>;

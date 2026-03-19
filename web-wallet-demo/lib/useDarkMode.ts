@@ -2,25 +2,27 @@
 
 import { useState, useEffect } from "react";
 
-// Get initial dark mode preference from localStorage or system preference
-const getInitialDarkMode = (): boolean => {
-  if (typeof window !== "undefined") {
-    // Check if user has a saved preference
-    const savedPreference = localStorage.getItem("darkMode");
-    if (savedPreference !== null) {
-      return JSON.parse(savedPreference);
-    }
-    // Fall back to system preference
-    return window.matchMedia?.("(prefers-color-scheme:dark)")?.matches ?? false;
-  }
-  return false;
-};
-
 export function useDarkMode() {
-  const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Update localStorage when dark mode changes
+  // Initialize from storage or system pref on client mount
   useEffect(() => {
+    setHasMounted(true);
+    if (typeof window !== "undefined") {
+      const savedPreference = localStorage.getItem("darkMode");
+      if (savedPreference !== null) {
+        setIsDarkMode(JSON.parse(savedPreference));
+      } else {
+        setIsDarkMode(window.matchMedia?.("(prefers-color-scheme:dark)")?.matches ?? false);
+      }
+    }
+  }, []);
+
+  // Update localStorage and body class when dark mode changes
+  useEffect(() => {
+    if (!hasMounted) return;
+    
     if (typeof window !== "undefined") {
       localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
 
@@ -33,10 +35,12 @@ export function useDarkMode() {
         document.documentElement.classList.remove('dark-theme');
       }
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, hasMounted]);
 
   // Listen for system preference changes
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    
     const darkModeMediaQuery = window.matchMedia(
       "(prefers-color-scheme: dark)"
     );
