@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/GASS_Updated.sol";
+import "../src/GASSToken.sol";
 
 /**
  * @title GASS Security & Spoofing Pressure Test Suite
@@ -42,7 +43,10 @@ contract GASS_SecurityTest is Test {
     function setUp() public {
         signerAddr = vm.addr(SIGNER_PK);
         attacker   = vm.addr(ATTACKER_PK);
-        gass = new GASS_Updated(signerAddr);
+        GASSToken token = new GASSToken();
+        gass = new GASS_Updated(signerAddr, address(token));
+        // Fund so that any successful processReward calls can transfer tokens
+        token.transfer(address(gass), 1_000 ether);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -116,14 +120,17 @@ contract GASS_SecurityTest is Test {
 
     function test_attack_zeroTrustedSigner_ecrecoverZeroBypass() public {
         // FIXED: constructor now rejects address(0) — this deploy reverts
+        // Deploy token first so vm.expectRevert only intercepts the GASS deploy
+        address token = address(new GASSToken());
         vm.expectRevert("Zero signer");
-        new GASS_Updated(address(0));
+        new GASS_Updated(address(0), token);
     }
 
     function test_mitigation_constructorShouldRejectZeroSigner() public {
         // FIXED: constructor rejects address(0)
+        address token = address(new GASSToken());
         vm.expectRevert("Zero signer");
-        new GASS_Updated(address(0));
+        new GASS_Updated(address(0), token);
     }
 
     // ── D. Cross-contract signature replay ────────────────────────────────────
@@ -138,8 +145,10 @@ contract GASS_SecurityTest is Test {
         uint256 ts = block.timestamp;
         bytes memory sig = _sign("cross-replay-user", victim, ts, amount);
 
-        // Deploy a second GASS with the SAME trustedSigner
-        GASS_Updated gass2 = new GASS_Updated(signerAddr);
+        // Deploy a second GASS with the SAME trustedSigner (and fund it)
+        GASSToken token2 = new GASSToken();
+        GASS_Updated gass2 = new GASS_Updated(signerAddr, address(token2));
+        token2.transfer(address(gass2), 1_000 ether);
 
         // Signature issued for gass is valid on gass2 — no contract address binding
         vm.prank(victim);

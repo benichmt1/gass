@@ -3,28 +3,33 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 import {GASS_Updated} from "../src/GASS_Updated.sol";
+import {GASSToken} from "../src/GASSToken.sol";
 
 contract GASS_UpdatedScript is Script {
-    GASS_Updated public gassContract;
-
     function setUp() public {}
 
     function run() public {
+        address trustedSigner = vm.envAddress("ADMIN_PUBLIC_KEY");
         vm.startBroadcast();
 
-        // Get trusted signer from env
-        address trustedSigner = vm.envAddress("ADMIN_PUBLIC_KEY");
-        console.log("Deploying with trusted signer:", trustedSigner);
+        // 1. Deploy the GASS ERC-20 token
+        GASSToken token = new GASSToken();
+        console.log("GASSToken deployed at:", address(token));
 
-        // Deploy the updated contract
-        gassContract = new GASS_Updated(trustedSigner);
+        // 2. Deploy the GASS rewards contract
+        GASS_Updated gass = new GASS_Updated(trustedSigner, address(token));
+        console.log("GASS_Updated deployed at:", address(gass));
+        console.log("trustedSigner:", gass.trustedSigner());
 
-        // Log the contract address
-        console.log("GASS_Updated (Github Activity Scoring System with Verification) deployed at:", address(gassContract));
+        // 3. Wire up the Rules Engine
+        gass.setRulesEngineAddress(0x6189A916E3f190Bf3cE6247b7A0dE862d1De8387);
+        console.log("Rules Engine:", gass.rulesEngineAddress());
 
-        // Set the Rules Engine address
-        gassContract.setRulesEngineAddress(0x6189A916E3f190Bf3cE6247b7A0dE862d1De8387);
-        console.log("Rules Engine address set to:", gassContract.rulesEngineAddress());
+        // 4. Fund the GASS contract with 10,000 GASS tokens for rewards
+        uint256 rewardPool = 10_000 * 10 ** 18;
+        token.transfer(address(gass), rewardPool);
+        console.log("Funded GASS contract with 10,000 GASS");
+        console.log("GASS contract token balance:", gass.tokenBalance());
 
         vm.stopBroadcast();
     }

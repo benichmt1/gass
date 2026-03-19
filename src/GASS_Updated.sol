@@ -2,6 +2,11 @@
 pragma solidity ^0.8.13;
 import "src/RulesEngineIntegration.sol";
 
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
+
 /**
  * @title GASS - Github Activity Scoring System (Updated & Secured)
  * @dev A token distribution system that uses the Forte Rules Engine to allocate rewards.
@@ -26,15 +31,29 @@ contract GASS_Updated is RulesEngineClientCustom {
     // Trusted Signer Address (Backend API Key)
     address public trustedSigner;
 
+    // GASS ERC-20 token to distribute
+    address public tokenAddress;
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
         _;
     }
 
-    constructor(address _trustedSigner) {
-        require(_trustedSigner != address(0), "Zero signer");
-        owner = msg.sender;
+    constructor(address _trustedSigner, address _tokenAddress) {
+        require(_trustedSigner  != address(0), "Zero signer");
+        require(_tokenAddress   != address(0), "Zero token");
+        owner        = msg.sender;
         trustedSigner = _trustedSigner;
+        tokenAddress  = _tokenAddress;
+    }
+
+    function setTokenAddress(address _tokenAddress) external onlyOwner {
+        require(_tokenAddress != address(0), "Zero token");
+        tokenAddress = _tokenAddress;
+    }
+
+    function tokenBalance() external view returns (uint256) {
+        return IERC20(tokenAddress).balanceOf(address(this));
     }
 
     function setRulesEngineAddress(address rulesEngine) public override onlyOwner {
@@ -89,6 +108,12 @@ contract GASS_Updated is RulesEngineClientCustom {
 
         // Mark as processed
         hasReceivedDistribution[githubUsername] = true;
+
+        // Transfer GASS tokens to the recipient
+        require(
+            IERC20(tokenAddress).transfer(to, amount),
+            "Token transfer failed"
+        );
 
         // Emit event to show successful distribution
         emit TokensDistributed(to, amount, githubUsername);

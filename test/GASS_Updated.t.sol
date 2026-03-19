@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/GASS_Updated.sol";
+import "../src/GASSToken.sol";
 
 contract GASS_UpdatedTest is Test {
     GASS_Updated public gass;
@@ -14,7 +15,10 @@ contract GASS_UpdatedTest is Test {
 
     function setUp() public {
         signerAddr = vm.addr(SIGNER_PK);
-        gass = new GASS_Updated(signerAddr);
+        GASSToken token = new GASSToken();
+        gass = new GASS_Updated(signerAddr, address(token));
+        // Fund the contract so token transfers succeed
+        token.transfer(address(gass), 1_000 ether);
     }
 
     // Helper: produce a valid signature for the given params

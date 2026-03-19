@@ -1,257 +1,211 @@
-import { createPublicClient, createWalletClient, http, type Address, type Hex } from 'viem';
+import { createPublicClient, http, type Address, type Hex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
-// GASS Contract address on Base Sepolia
-export const GASS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_GASS_CONTRACT_ADDRESS || '0xeB46824FA12487314CA0BA9d7717EEFAc818567e';
+// Contract addresses
+export const GASS_CONTRACT_ADDRESS  = process.env.NEXT_PUBLIC_GASS_CONTRACT_ADDRESS  || '0xF35C0460Df0678c21FE813971C5087B5fd03366A';
+export const GASS_TOKEN_ADDRESS     = process.env.NEXT_PUBLIC_GASS_TOKEN_ADDRESS     || '0x777E1Ad0Cfb52abbF5A5F70dB4382CC166d8DFf7';
+export const O2_ORACLE_ADDRESS      = process.env.NEXT_PUBLIC_O2_ORACLE_ADDRESS      || '0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2';
+export const RPC_URL                = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL   || 'https://base-sepolia-rpc.publicnode.com';
 
-// O2 Oracle address on Base Sepolia
-export const O2_ORACLE_ADDRESS = process.env.NEXT_PUBLIC_O2_ORACLE_ADDRESS || '0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2';
+// Tier reward amounts (in GASS wei)
+export const TIER_AMOUNTS = {
+  LIMITED:  BigInt( 50) * BigInt(10 ** 18),  //  50 GASS
+  STANDARD: BigInt(100) * BigInt(10 ** 18),  // 100 GASS
+  BONUS:    BigInt(200) * BigInt(10 ** 18),  // 200 GASS
+} as const;
 
-// Base Sepolia RPC URL
-export const RPC_URL = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://base-sepolia-rpc.publicnode.com';
-
-// Minimal ABI for the GASS contract's processReward function
 export const GASS_ABI = [
   {
-    "inputs": [
-      { "internalType": "address", "name": "to", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" },
-      { "internalType": "string", "name": "githubUsername", "type": "string" },
-      { "internalType": "bytes", "name": "signature", "type": "bytes" },
-      { "internalType": "uint256", "name": "verificationTimestamp", "type": "uint256" }
+    inputs: [
+      { internalType: 'address', name: 'to',                    type: 'address' },
+      { internalType: 'uint256', name: 'amount',                type: 'uint256' },
+      { internalType: 'string',  name: 'githubUsername',        type: 'string'  },
+      { internalType: 'bytes',   name: 'signature',             type: 'bytes'   },
+      { internalType: 'uint256', name: 'verificationTimestamp', type: 'uint256' },
     ],
-    "name": "processReward",
-    "outputs": [{ "internalType": "bool", "name": "success", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    name: 'processReward',
+    outputs: [{ internalType: 'bool', name: 'success', type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    "inputs": [
-      { "internalType": "string", "name": "githubUsername", "type": "string" }
-    ],
-    "name": "hasDistributionBeenProcessed",
-    "outputs": [{ "internalType": "bool", "name": "distributed", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+    inputs:  [{ internalType: 'string', name: 'githubUsername', type: 'string' }],
+    name:    'hasDistributionBeenProcessed',
+    outputs: [{ internalType: 'bool',   name: 'distributed',   type: 'bool'   }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs:  [],
+    name:    'tokenBalance',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
-// Create a public client for read-only operations
+// Minimal O2 Oracle ABI — only the three getter functions used by the RE policy
+export const O2_ORACLE_ABI = [
+  {
+    inputs:  [{ internalType: 'string', name: 'username', type: 'string' }],
+    name:    'getQuality_score',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs:  [{ internalType: 'string', name: 'username', type: 'string' }],
+    name:    'getLast_updated',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs:  [{ internalType: 'string', name: 'username', type: 'string' }],
+    name:    'getReview_count',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 export const publicClient = createPublicClient({
   chain: baseSepolia,
   transport: http(RPC_URL),
 });
 
-// Tier definitions based on the actual policy
 export enum RewardTier {
-  NONE = 'None',
+  NONE     = 'None',
   REJECTED = 'Rejected',
-  LIMITED = 'Limited',
+  LIMITED  = 'Limited',
   STANDARD = 'Standard',
-  BONUS = 'Bonus'
+  BONUS    = 'Bonus',
 }
 
 export interface EligibilityResult {
-  hasReceived: boolean;
-  eligibleTier: RewardTier;
+  hasReceived:   boolean;
+  eligibleTier:  RewardTier;
   qualityScore?: number;
-  lastUpdated?: number;
-  reviewCount?: number;
-  error?: string;
+  lastUpdated?:  number;
+  reviewCount?:  number;
+  amount?:       bigint;
+  error?:        string;
 }
 
-// Check if a GitHub username has already received a distribution
 export async function checkDistributionStatus(githubUsername: string): Promise<boolean> {
   try {
-    const hasReceived = await publicClient.readContract({
-      address: GASS_CONTRACT_ADDRESS as Address,
-      abi: GASS_ABI,
+    return await publicClient.readContract({
+      address:      GASS_CONTRACT_ADDRESS as Address,
+      abi:          GASS_ABI,
       functionName: 'hasDistributionBeenProcessed',
-      args: [githubUsername],
-    });
-
-    return hasReceived as boolean;
-  } catch (error) {
-    console.error('Error checking distribution status:', error);
+      args:         [githubUsername],
+    }) as boolean;
+  } catch {
     return false;
   }
 }
 
-// Check eligibility and determine which tier the user qualifies for
+/**
+ * Reads the O2 Oracle on-chain and applies the same tier logic as the RE policy:
+ *   - quality_score <= 50 → REJECTED
+ *   - quality_score > 50 AND last_updated < 1750000000 → LIMITED  (50 GASS)
+ *   - quality_score > 50 AND last_updated >= 1750000000 AND review_count > 100 → BONUS (200 GASS)
+ *   - quality_score > 50 AND last_updated >= 1750000000 AND review_count <= 100 → STANDARD (100 GASS)
+ *   - no data found (all zeros) → NONE
+ */
 export async function checkEligibilityTier(githubUsername: string): Promise<EligibilityResult> {
   try {
-    // First check if the user has already received a distribution
     const hasReceived = await checkDistributionStatus(githubUsername);
-
     if (hasReceived) {
-      return {
-        hasReceived: true,
-        eligibleTier: RewardTier.NONE
-      };
+      return { hasReceived: true, eligibleTier: RewardTier.NONE };
     }
 
-    // For a real implementation, we would query the O2 Oracle directly
-    // or use the GASS contract to determine eligibility based on the criteria
-    // For this demo, we'll use hardcoded values for michael-bey
+    // Fetch all three metrics in parallel from the O2 Oracle
+    const [rawScore, rawLastUpdated, rawReviewCount] = await Promise.all([
+      publicClient.readContract({
+        address: O2_ORACLE_ADDRESS as Address, abi: O2_ORACLE_ABI,
+        functionName: 'getQuality_score', args: [githubUsername],
+      }),
+      publicClient.readContract({
+        address: O2_ORACLE_ADDRESS as Address, abi: O2_ORACLE_ABI,
+        functionName: 'getLast_updated', args: [githubUsername],
+      }),
+      publicClient.readContract({
+        address: O2_ORACLE_ADDRESS as Address, abi: O2_ORACLE_ABI,
+        functionName: 'getReview_count', args: [githubUsername],
+      }),
+    ]);
 
-    if (githubUsername === 'michael-bey') {
-      // Based on the README and policy, michael-bey has:
-      // - Quality score of 63 (> 50, so passes first rule)
-      // - Last updated timestamp of 1747331744 (< 1750000000, so matches LIMITED tier)
-      // - Review count of 15 (< 100, so not eligible for BONUS tier)
+    const qualityScore  = Number(rawScore);
+    const lastUpdated   = Number(rawLastUpdated);
+    const reviewCount   = Number(rawReviewCount);
 
-      const qualityScore = 63;
-      const lastUpdated = 1747331744;
-      const reviewCount = 15; // Based on our simulation
-
-      // Apply the actual policy rules:
-
-      // Rule 1: If quality score <= 50, REJECTED
-      if (qualityScore <= 50) {
-        return {
-          hasReceived: false,
-          eligibleTier: RewardTier.REJECTED,
-          qualityScore,
-          lastUpdated,
-          reviewCount
-        };
-      }
-
-      // Rule 2: If quality score > 50 AND last updated < 1750000000, LIMITED
-      if (qualityScore > 50 && lastUpdated < 1750000000) {
-        return {
-          hasReceived: false,
-          eligibleTier: RewardTier.LIMITED,
-          qualityScore,
-          lastUpdated,
-          reviewCount
-        };
-      }
-
-      // Rule 3: If quality score > 50 AND last updated >= 1750000000 AND review count > 100, BONUS
-      if (qualityScore > 50 && lastUpdated >= 1750000000 && reviewCount > 100) {
-        return {
-          hasReceived: false,
-          eligibleTier: RewardTier.BONUS,
-          qualityScore,
-          lastUpdated,
-          reviewCount
-        };
-      }
-
-      // Rule 4: If quality score > 50 AND last updated >= 1750000000 AND review count <= 100, STANDARD
-      if (qualityScore > 50 && lastUpdated >= 1750000000 && reviewCount <= 100) {
-        return {
-          hasReceived: false,
-          eligibleTier: RewardTier.STANDARD,
-          qualityScore,
-          lastUpdated,
-          reviewCount
-        };
-      }
-
-      // Fallback (should never reach here based on the rules)
-      return {
-        hasReceived: false,
-        eligibleTier: RewardTier.NONE,
-        qualityScore,
-        lastUpdated,
-        reviewCount,
-        error: "No matching tier found - this should never happen"
-      };
-    } else {
-      // For other usernames, create a simulated profile
-      // Let's make it eligible for STANDARD tier
-      const qualityScore = 75;
-      const lastUpdated = 1755000000; // Recent activity
-      const reviewCount = 50; // Moderate activity
-
-      return {
-        hasReceived: false,
-        eligibleTier: RewardTier.STANDARD,
-        qualityScore,
-        lastUpdated,
-        reviewCount
-      };
+    // No data → username not in the oracle yet
+    if (qualityScore === 0 && lastUpdated === 0 && reviewCount === 0) {
+      return { hasReceived: false, eligibleTier: RewardTier.NONE, qualityScore, lastUpdated, reviewCount };
     }
+
+    // Apply the same rules as the on-chain RE policy
+    if (qualityScore <= 50) {
+      return { hasReceived: false, eligibleTier: RewardTier.REJECTED, qualityScore, lastUpdated, reviewCount };
+    }
+    if (lastUpdated < 1750000000) {
+      return { hasReceived: false, eligibleTier: RewardTier.LIMITED, qualityScore, lastUpdated, reviewCount, amount: TIER_AMOUNTS.LIMITED };
+    }
+    if (reviewCount > 100) {
+      return { hasReceived: false, eligibleTier: RewardTier.BONUS, qualityScore, lastUpdated, reviewCount, amount: TIER_AMOUNTS.BONUS };
+    }
+    return { hasReceived: false, eligibleTier: RewardTier.STANDARD, qualityScore, lastUpdated, reviewCount, amount: TIER_AMOUNTS.STANDARD };
+
   } catch (error) {
     console.error('Error checking eligibility tier:', error);
     return {
-      hasReceived: false,
+      hasReceived:  false,
       eligibleTier: RewardTier.NONE,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-// Check eligibility and get signature from backend
 export async function verifyAndSignEligibility(
   githubUsername: string,
-  address: string,
-  proof: string,
-  timestamp: number
+  address:        string,
+  proof:          string,
+  timestamp:      number,
 ): Promise<{ success: boolean; signature?: Hex; amount?: bigint; error?: string; tier?: string }> {
   try {
     const response = await fetch('/api/verify-eligibility', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        githubUsername,
-        address,
-        proof,
-        timestamp
-      })
+      body:    JSON.stringify({ githubUsername, address, proof, timestamp }),
     });
-
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Verification failed');
-    }
-
-    return {
-      success: true,
-      signature: data.signature as Hex,
-      amount: BigInt(data.amount),
-      tier: data.tier
-    };
+    if (!response.ok) throw new Error(data.error || 'Verification failed');
+    return { success: true, signature: data.signature as Hex, amount: BigInt(data.amount), tier: data.tier };
   } catch (error) {
-    console.error('Error verifying eligibility:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown verification error'
-    };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown verification error' };
   }
 }
 
-// Process a reward for a GitHub username using the connected wallet
 export async function processReward(
-  walletClient: any,
-  to: Address,
-  amount: bigint,
-  githubUsername: string,
-  signature: Hex,
-  verificationTimestamp: number
+  walletClient:          any,
+  to:                    Address,
+  amount:                bigint,
+  githubUsername:        string,
+  signature:             Hex,
+  verificationTimestamp: number,
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
   try {
-    // Prepare the transaction
     const { request } = await publicClient.simulateContract({
-      address: GASS_CONTRACT_ADDRESS as Address,
-      abi: GASS_ABI,
+      address:      GASS_CONTRACT_ADDRESS as Address,
+      abi:          GASS_ABI,
       functionName: 'processReward',
-      args: [to, amount, githubUsername, signature, BigInt(verificationTimestamp)],
-      account: to,
+      args:         [to, amount, githubUsername, signature, BigInt(verificationTimestamp)],
+      account:      to,
     });
-
-    // Send the transaction
     const hash = await walletClient.writeContract(request);
-
     return { success: true, txHash: hash };
   } catch (error: any) {
-    console.error('Error processing reward:', error);
-    return {
-      success: false,
-      error: error?.message || 'Unknown error occurred while processing reward'
-    };
+    return { success: false, error: error?.message || 'Unknown error' };
   }
 }

@@ -10,6 +10,7 @@ import {
     checkEligibilityTier,
     verifyAndSignEligibility,
     RewardTier,
+    TIER_AMOUNTS,
     type EligibilityResult,
     GASS_CONTRACT_ADDRESS
 } from '@/lib/contractUtils';
@@ -629,7 +630,13 @@ export default function ClaimFlow() {
 
                                         <div className="gass-stats-row">
                                             <div className="gass-stat-item">
-                                                <div className="gass-stat-item-value font-mono">1.0 GASS</div>
+                                                <div className="gass-stat-item-value font-mono">
+                                                    {eligibilityResult?.amount
+                                                        ? `${Number(eligibilityResult.amount / BigInt(10 ** 18))} GASS`
+                                                        : eligibilityResult?.eligibleTier === RewardTier.LIMITED  ? '50 GASS'
+                                                        : eligibilityResult?.eligibleTier === RewardTier.BONUS    ? '200 GASS'
+                                                        : '100 GASS'}
+                                                </div>
                                                 <div className="gass-stat-item-label">Reward Amount</div>
                                             </div>
                                             <div className="gass-stat-item">
@@ -653,7 +660,7 @@ export default function ClaimFlow() {
                                         </div>
                                         <h3 className="gass-wizard-card-title" style={{ color: 'var(--system-green)' }}>Success!</h3>
                                         <p className="gass-wizard-card-description">
-                                            Your GASS tokens have been sent to your wallet.
+                                            Your GASS tokens have been sent to your wallet on Base Sepolia.
                                         </p>
 
                                         {txHash && (
