@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createPublicClient, createWalletClient, http, keccak256, encodePacked, toBytes, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
+import * as jose from 'jose';
 
 if (!process.env.ADMIN_PRIVATE_KEY) {
     throw new Error('ADMIN_PRIVATE_KEY environment variable is required');
@@ -55,8 +56,28 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        if (proof.length < 10) {
-            return NextResponse.json({ error: 'Invalid verification proof' }, { status: 401 });
+        // Verify Dynamic JWT and extract GitHub username
+        const dynamicEnvId = process.env.NEXT_PUBLIC_DYNAMIC_ENV_ID || '29ed16d2-1bac-4503-bfe0-1dbdc206af0a';
+        const jwksUrl = `https://app.dynamic.xyz/api/v0/sdk/${dynamicEnvId}/.well-known/jwks`;
+        const JWKS = jose.createRemoteJWKSet(new URL(jwksUrl));
+
+        let jwtPayload: jose.JWTPayload;
+        try {
+            const { payload } = await jose.jwtVerify(proof, JWKS);
+            jwtPayload = payload;
+        } catch (jwtErr) {
+            console.warn('JWT verification failed:', jwtErr);
+            return NextResponse.json({ error: 'Invalid or expired verification proof' }, { status: 401 });
+        }
+
+        const verifiedCredentials = (jwtPayload as any).verified_credentials as Array<{ provider?: string; oauthProvider?: string; username?: string; oauthUsername?: string }> | undefined;
+        const githubCred = verifiedCredentials?.find(
+            (c) => c.provider === 'github' || c.oauthProvider === 'github'
+        );
+        const extractedUsername = githubCred?.username || githubCred?.oauthUsername;
+
+        if (!extractedUsername || extractedUsername !== githubUsername) {
+            return NextResponse.json({ error: 'GitHub username mismatch' }, { status: 401 });
         }
 
         // Read tier from O2 Oracle (same logic as the on-chain RE policy)
@@ -66,9 +87,8 @@ export async function POST(request: Request) {
         try {
             ({ tier, amount } = await getOracleTier(githubUsername));
         } catch (oracleErr) {
-            console.warn('O2 Oracle read failed, falling back to Standard tier:', oracleErr);
-            tier   = 'Standard';
-            amount = TIER_AMOUNTS.STANDARD;
+            console.error('O2 Oracle read failed:', oracleErr);
+            return NextResponse.json({ error: 'Oracle unavailable, please try again' }, { status: 503 });
         }
 
         if (tier === 'Rejected' || amount === 0n) {

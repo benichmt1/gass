@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { isEthereumWallet } from '@dynamic-labs/ethereum';
-import { parseEther, type Address, type Hex } from 'viem';
+import { type Address, type Hex } from 'viem';
 import {
     checkDistributionStatus,
     processReward,
@@ -220,15 +220,19 @@ export default function ClaimFlow() {
         let currentProof = verificationProof;
         let currentTimestamp = verificationTimestamp;
 
-        if (!effectiveSimulationMode && (!currentProof || !currentTimestamp)) {
-            // Try to generate proof if missing
-            const result = await generateProof();
-            currentProof = result.proof;
-            currentTimestamp = result.timestamp;
+        if (!effectiveSimulationMode) {
+            const isStale = !currentProof || !currentTimestamp ||
+                (Date.now() / 1000 - currentTimestamp > 3000);
 
-            if (!currentProof) {
-                setError("Verification proof required. Please try again.");
-                return;
+            if (isStale) {
+                const result = await generateProof();
+                currentProof = result.proof;
+                currentTimestamp = result.timestamp;
+
+                if (!currentProof) {
+                    setError("Verification proof required. Please try again.");
+                    return;
+                }
             }
         }
 
@@ -258,11 +262,13 @@ export default function ClaimFlow() {
                     throw new Error(verificationResult.error || "Server verification failed");
                 }
 
+                if (!verificationResult.amount) throw new Error('Backend returned no amount');
+
                 const walletClient = await primaryWallet.getWalletClient();
                 const result = await processReward(
                     walletClient,
                     primaryWallet.address as Address,
-                    verificationResult.amount || parseEther('1'),
+                    verificationResult.amount,
                     githubUsername,
                     verificationResult.signature,
                     currentTimestamp!
