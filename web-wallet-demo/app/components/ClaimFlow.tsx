@@ -30,11 +30,11 @@ import {
     Loader2,
     Trophy,
     XCircle,
-    Gift,
     Github,
     Circle,
     CheckCircle,
-    Globe
+    Globe,
+    LogOut
 } from 'lucide-react';
 import { BaseLogoSimple, DynamicLogo } from './Logos';
 
@@ -50,6 +50,7 @@ export default function ClaimFlow() {
         primaryWallet,
         githubUsername: authGithubUsername
     } = useDynamicAuth();
+    const { handleLogOut } = useDynamicContext();
 
     // Logic State
     const [loading, setLoading] = useState(false);
@@ -90,7 +91,39 @@ export default function ClaimFlow() {
         }
     }, [currentStep, isAuthenticated, primaryWallet, githubUsername]);
 
+    // Reset to step 1 if auth drops (e.g. user disconnects via Dynamic modal)
+    useEffect(() => {
+        if (!isAuthenticated && currentStep > 1) {
+            setCurrentStep(1);
+            setEligibilityResult(null);
+            setIsEligible(false);
+            setAlreadyReceived(false);
+            setVerificationProof(null);
+            setVerificationTimestamp(null);
+            setError(null);
+            setRewardProcessed(false);
+            setTxHash(null);
+            setContractCallInfo(null);
+        }
+    }, [isAuthenticated, currentStep]);
+
     // --- ACTIONS ---
+
+    // 0. Disconnect / start over
+    const handleDisconnect = async () => {
+        await handleLogOut();
+        setCurrentStep(1);
+        setEligibilityResult(null);
+        setIsEligible(false);
+        setAlreadyReceived(false);
+        setVerificationProof(null);
+        setVerificationTimestamp(null);
+        setError(null);
+        setLoading(false);
+        setRewardProcessed(false);
+        setTxHash(null);
+        setContractCallInfo(null);
+    };
 
     // 1. Generate Verification Proof
     const generateProof = async (): Promise<{ proof: string | null, timestamp: number | null }> => {
@@ -291,44 +324,8 @@ export default function ClaimFlow() {
 
     // --- RENDER HELPERS ---
 
-    // --- RENDER HELPERS ---
-
-    const StepIndicator = () => (
-        <div className="flex items-center justify-center gap-4 mb-8">
-            {[1, 2, 3].map(step => {
-                const isClickable = step < currentStep || (step === 3 && rewardProcessed) || (step === 2 && isAuthenticated);
-                const isActive = step === currentStep;
-                const isCompleted = step < currentStep || (step === 3 && rewardProcessed);
-
-                return (
-                    <div
-                        key={step}
-                        onClick={() => isClickable && setCurrentStep(step as 1 | 2 | 3)}
-                        className={`flex items-center gap-2 transition-all ${isClickable ? 'cursor-pointer hover:opacity-100' : 'cursor-default opacity-60'} ${isActive ? 'text-white scale-105' : 'text-white/40'}`}
-                    >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-all duration-300
-                        ${isActive ? 'bg-blue-500 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)]' :
-                                isCompleted ? 'bg-green-500 border-green-400 text-black' : 'bg-transparent border-white/20'}`}>
-                            {isCompleted ? <Check className="w-4 h-4" /> : step}
-                        </div>
-                        <span className={`text-sm font-medium uppercase tracking-wider hidden sm:block ${isActive ? 'text-blue-400' : ''}`}>
-                            {step === 1 ? 'Connect' : step === 2 ? 'Verify' : 'Claim'}
-                        </span>
-                        {step < 3 && <div className={`w-12 h-[1px] mx-2 transition-colors ${isCompleted ? 'bg-green-500/50' : 'bg-white/10'}`} />}
-                    </div>
-                );
-            })}
-        </div>
-    );
-
     return (
         <div className="w-full">
-            {/* Top Header Area with Steps - Only for Dashboard Mode */}
-            {currentStep > 1 && (
-                <div className="gass-step-header">
-                    <StepIndicator />
-                </div>
-            )}
 
             {/* SPLIT-SCREEN LANDING (Step 1) */}
             {currentStep === 1 && (
@@ -515,34 +512,91 @@ export default function ClaimFlow() {
 
                     {/* Compact Profile Summary Bar */}
                     <div className="gass-profile-bar">
-                        <div className={`gass-profile-badge ${primaryWallet ? 'connected' : 'pending'}`}>
-                            <span className="gass-profile-badge-icon">
-                                {primaryWallet ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                            </span>
-                            <span className="gass-profile-badge-value">
-                                {primaryWallet ? `${primaryWallet.address.substring(0, 6)}...${primaryWallet.address.slice(-4)}` : 'No Wallet'}
-                            </span>
+                        <div className="gass-profile-bar-badges">
+                            <div className={`gass-profile-badge ${primaryWallet ? 'connected' : 'pending'}`}>
+                                <span className="gass-profile-badge-icon">
+                                    {primaryWallet ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                                </span>
+                                <span className="gass-profile-badge-value">
+                                    {primaryWallet ? `${primaryWallet.address.substring(0, 6)}...${primaryWallet.address.slice(-4)}` : 'No Wallet'}
+                                </span>
+                            </div>
+                            {githubUsername ? (
+                                <a
+                                    href={`https://github.com/${githubUsername}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`gass-profile-badge connected`}
+                                    style={{ textDecoration: 'none' }}
+                                >
+                                    <span className="gass-profile-badge-icon"><Github className="w-3 h-3" /></span>
+                                    <span className="gass-profile-badge-value">{githubUsername}</span>
+                                </a>
+                            ) : (
+                                <div className="gass-profile-badge pending">
+                                    <span className="gass-profile-badge-icon"><Circle className="w-3 h-3" /></span>
+                                    <span className="gass-profile-badge-value">GitHub Not Connected</span>
+                                </div>
+                            )}
                         </div>
-                        <div className={`gass-profile-badge ${githubUsername ? 'connected' : 'pending'}`}>
-                            <span className="gass-profile-badge-icon">
-                                {githubUsername ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                            </span>
-                            <span className="gass-profile-badge-value">
-                                {githubUsername || 'GitHub Not Connected'}
-                            </span>
-                        </div>
-                        <DynamicWidget />
+                        <button onClick={handleDisconnect} className="gass-disconnect-btn">
+                            <LogOut className="w-3 h-3" />
+                            Disconnect
+                        </button>
                     </div>
 
-                    {/* Main Wizard Card */}
-                    <div className="gass-wizard-card">
+                    {/* Step 2: Verify — two-column layout */}
+                    {currentStep === 2 && (
+                        <div className="gass-flow-columns">
+                            {/* Left: context panel */}
+                            <div className="gass-flow-left">
+                                <div className="gass-flow-left-header">
+                                    <div className="gass-flow-left-icon">
+                                        <Zap className="w-4 h-4 text-white" fill="currentColor" />
+                                    </div>
+                                    <h3 className="gass-flow-left-title">How Your Score Works</h3>
+                                </div>
+                                <p className="gass-flow-left-body">
+                                    Your contribution score is calculated from the quality and quantity of your open source activity on GitHub. Higher scores unlock larger GASS reward tiers.
+                                </p>
+                                <div className="gass-flow-tier-table">
+                                    <div className="gass-flow-tier-row">
+                                        <span className="gass-tier-label limited">Limited</span>
+                                        <span>1 – 39</span>
+                                        <span>50 GASS</span>
+                                    </div>
+                                    <div className="gass-flow-tier-row">
+                                        <span className="gass-tier-label standard">Standard</span>
+                                        <span>40 – 79</span>
+                                        <span>100 GASS</span>
+                                    </div>
+                                    <div className="gass-flow-tier-row">
+                                        <span className="gass-tier-label bonus">Bonus</span>
+                                        <span>80 – 100</span>
+                                        <span>200 GASS</span>
+                                    </div>
+                                </div>
+                                <div className="gass-flow-left-partners">
+                                    <a
+                                        href="https://github.com/michael-bey/gass"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 gass-flow-partner-link"
+                                    >
+                                        <Github className="w-4 h-4" />
+                                        <span className="gass-flow-partner-name">michael-bey/gass</span>
+                                    </a>
+                                    <div className="flex items-center gap-2">
+                                        <BaseLogoSimple className="w-4 h-4" />
+                                        <span className="gass-flow-partner-name">BASE</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                        {/* Step 2: Verify */}
-                        {currentStep === 2 && (
-                            <>
+                            {/* Right: action panel */}
+                            <div className="gass-flow-right">
                                 {!eligibilityResult && !loading && (
                                     <div className="gass-action-bar">
-                                        <div className="gass-action-bar-icon"><Search className="w-6 h-6 text-white" /></div>
                                         <div className="gass-action-bar-content">
                                             <h3 className="gass-action-bar-title">Check Your Eligibility</h3>
                                             <p className="gass-action-bar-description">
@@ -556,154 +610,193 @@ export default function ClaimFlow() {
                                 )}
 
                                 {loading && (
-                                    <div className="py-8">
-                                        <div className="gass-wizard-card-icon"><Loader2 className="w-10 h-10 animate-spin text-blue-400" /></div>
+                                    <div className="flex flex-col items-center gap-3 py-8">
+                                        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--accent-indigo)' }} />
                                         <p className="gass-wizard-card-description">Analyzing your contribution data...</p>
                                     </div>
                                 )}
 
                                 {eligibilityResult && (
                                     <>
-                                        {/* Stats Row */}
-                                        <div className="gass-stats-row">
-                                            <div className="gass-stat-item">
-                                                <div className="gass-stat-item-value">{eligibilityResult.qualityScore || 0}</div>
-                                                <div className="gass-stat-item-label">Quality Score</div>
-                                            </div>
-                                            <div className="gass-stat-item">
-                                                <div className="gass-stat-item-value">{eligibilityResult.reviewCount || 0}</div>
-                                                <div className="gass-stat-item-label">Reviews</div>
-                                            </div>
-                                            <div className="gass-stat-item">
-                                                <div className={`gass-tier-badge ${eligibilityResult.eligibleTier === RewardTier.BONUS ? 'bonus' : 'standard'}`}>
-                                                    {eligibilityResult.eligibleTier}
+                                        {/* Scorecard — clean metric grid */}
+                                        <div className="gass-scorecard">
+                                            <div className="gass-scorecard-metric">
+                                                <span className="gass-metric-value">{eligibilityResult.qualityScore ?? 0}</span>
+                                                <div className="gass-metric-bar">
+                                                    <div className="gass-metric-bar-fill" style={{ width: `${eligibilityResult.qualityScore ?? 0}%` }} />
                                                 </div>
+                                                <span className="gass-metric-label">Score</span>
+                                            </div>
+                                            <div className="gass-scorecard-divider" />
+                                            <div className="gass-scorecard-metric">
+                                                <span className="gass-metric-value">{eligibilityResult.reviewCount ?? 0}</span>
+                                                <span className="gass-metric-label">Reviews</span>
+                                            </div>
+                                            <div className="gass-scorecard-divider" />
+                                            <div className="gass-scorecard-metric">
+                                                <span className={`gass-tier-label ${eligibilityResult.eligibleTier === RewardTier.BONUS ? 'bonus' : eligibilityResult.eligibleTier === RewardTier.LIMITED ? 'limited' : eligibilityResult.eligibleTier === RewardTier.NONE || eligibilityResult.eligibleTier === RewardTier.REJECTED ? 'none' : 'standard'}`}>
+                                                    {eligibilityResult.eligibleTier}
+                                                </span>
+                                                <span className="gass-metric-label">Your Tier</span>
                                             </div>
                                         </div>
 
                                         {isEligible ? (
                                             <div className="gass-result-card eligible">
-                                                <div className="gass-result-card-header">
-                                                    <span className="gass-result-card-icon"><Trophy className="w-8 h-8 text-yellow-500" /></span>
-                                                    <div>
-                                                        <div className="gass-result-card-title">You&apos;re Eligible!</div>
-                                                        <p className="text-white/60 text-sm">
-                                                            Your contributions qualify for the <strong>{eligibilityResult.eligibleTier}</strong> tier.
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                                <div className="gass-result-card-title">You&apos;re Eligible!</div>
+                                                <p className="text-white/60 text-sm">
+                                                    Your contributions qualify for the <strong>{eligibilityResult.eligibleTier}</strong> tier.
+                                                </p>
                                                 {!alreadyReceived ? (
                                                     <button
                                                         onClick={() => setCurrentStep(3)}
-                                                        className="gass-wizard-cta success"
+                                                        className="gass-wizard-cta"
                                                     >
                                                         Continue to Claim →
                                                     </button>
                                                 ) : (
-                                                    <div className="text-sm text-green-400/70 mt-4 flex items-center gap-2">
+                                                    <div className="text-sm mt-4 flex items-center gap-2" style={{ color: 'var(--system-green)', opacity: 0.7 }}>
                                                         <Check className="w-4 h-4" /> Reward already claimed for this account.
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
                                             <div className="gass-result-card ineligible">
-                                                <div className="gass-result-card-header">
-                                                    <span className="gass-result-card-icon"><XCircle className="w-8 h-8 text-red-500" /></span>
-                                                    <div>
-                                                        <div className="gass-result-card-title">Not Eligible</div>
-                                                        <p className="text-white/60 text-sm">
-                                                            Your account does not meet the minimum contribution requirements.
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                                <div className="gass-result-card-title">Not Eligible</div>
+                                                <p className="text-white/60 text-sm">
+                                                    Your account does not meet the minimum contribution requirements.
+                                                </p>
                                             </div>
                                         )}
                                     </>
                                 )}
-                            </>
-                        )}
+                            </div>
+                        </div>
+                    )}
 
-                        {/* Step 3: Claim */}
-                        {currentStep === 3 && (
-                            <>
-                                {!rewardProcessed ? (
-                                    <>
-                                        <div className="gass-wizard-card-icon"><Gift className="w-12 h-12 text-blue-400" /></div>
-                                        <h3 className="gass-wizard-card-title">Claim Your Reward</h3>
-                                        <p className="gass-wizard-card-description">
-                                            Confirm the transaction to receive your GASS tokens.
-                                        </p>
+                    {/* Step 3: Claim — two-column pre-claim / centered success */}
+                    {currentStep === 3 && !rewardProcessed && (
+                        <div className="gass-flow-columns">
+                            {/* Left: reward summary */}
+                            <div className="gass-flow-left gass-reward-summary">
+                                <div className={`gass-tier-badge ${eligibilityResult?.eligibleTier === RewardTier.BONUS ? 'bonus' : eligibilityResult?.eligibleTier === RewardTier.LIMITED ? 'limited' : 'standard'}`}>
+                                    {eligibilityResult?.eligibleTier || 'Standard'}
+                                </div>
+                                <div className="gass-reward-amount">
+                                    <span className="gass-reward-amount-number">
+                                        {eligibilityResult?.amount
+                                            ? Number(eligibilityResult.amount / BigInt(10 ** 18))
+                                            : eligibilityResult?.eligibleTier === RewardTier.LIMITED ? 50
+                                            : eligibilityResult?.eligibleTier === RewardTier.BONUS ? 200
+                                            : 100}
+                                    </span>
+                                    <span className="gass-reward-amount-ticker">GASS</span>
+                                </div>
+                                <div className="gass-reward-meta">
+                                    <div className="gass-reward-meta-item">
+                                        <Globe className="w-4 h-4" />
+                                        <span>Base Sepolia</span>
+                                    </div>
+                                    <div className="gass-reward-meta-item">
+                                        <Check className="w-4 h-4 text-green-400" />
+                                        <span>Eligibility verified</span>
+                                    </div>
+                                </div>
+                                <div className="gass-reward-footnote">
+                                    Based on a quality score of <strong>{eligibilityResult?.qualityScore ?? 0}</strong>
+                                </div>
+                            </div>
 
-                                        <div className="gass-stats-row">
-                                            <div className="gass-stat-item">
-                                                <div className="gass-stat-item-value font-mono">
-                                                    {eligibilityResult?.amount
-                                                        ? `${Number(eligibilityResult.amount / BigInt(10 ** 18))} GASS`
-                                                        : eligibilityResult?.eligibleTier === RewardTier.LIMITED  ? '50 GASS'
-                                                        : eligibilityResult?.eligibleTier === RewardTier.BONUS    ? '200 GASS'
-                                                        : '100 GASS'}
-                                                </div>
-                                                <div className="gass-stat-item-label">Reward Amount</div>
-                                            </div>
-                                            <div className="gass-stat-item">
-                                                <div className="gass-stat-item-value text-sm">Base Sepolia</div>
-                                                <div className="gass-stat-item-label">Network</div>
-                                            </div>
-                                        </div>
+                            {/* Right: confirm panel */}
+                            <div className="gass-flow-right gass-claim-confirm">
+                                <h3 className="gass-claim-confirm-title">Claim Your Reward</h3>
+                                <p className="gass-claim-confirm-description">
+                                    Confirm the transaction to receive your GASS tokens directly to your connected wallet.
+                                </p>
+                                <div className="gass-claim-wallet-block">
+                                    <div className="gass-claim-wallet-label">Receiving wallet</div>
+                                    <div className="gass-claim-wallet-address">
+                                        {primaryWallet
+                                            ? `${primaryWallet.address.substring(0, 10)}...${primaryWallet.address.slice(-8)}`
+                                            : '—'}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleClaim}
+                                    disabled={processingReward}
+                                    className="gass-button-claim"
+                                    style={{ width: '100%' }}
+                                >
+                                    {processingReward ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Processing...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <Zap className="w-5 h-5" fill="currentColor" />
+                                            Confirm Claim
+                                        </span>
+                                    )}
+                                </button>
+                                <p className="gass-claim-footnote">Tokens arrive instantly. One claim per account.</p>
+                            </div>
+                        </div>
+                    )}
 
-                                        <button
-                                            onClick={handleClaim}
-                                            disabled={processingReward}
-                                            className={`gass-wizard-cta ${processingReward ? 'opacity-50' : ''}`}
-                                        >
-                                            {processingReward ? 'Processing...' : 'Confirm Claim'}
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="gass-wizard-card-icon" style={{ background: 'rgba(48, 209, 88, 0.2)' }}>
-                                            <CheckCircle className="w-12 h-12 text-green-500" />
-                                        </div>
-                                        <h3 className="gass-wizard-card-title" style={{ color: 'var(--system-green)' }}>Success!</h3>
-                                        <p className="gass-wizard-card-description">
-                                            Your GASS tokens have been sent to your wallet on Base Sepolia.
-                                        </p>
-
-                                        {txHash && (
-                                            <div className="bg-black/40 p-4 rounded-lg border border-white/10 mb-6 max-w-md mx-auto">
-                                                <div className="text-[10px] text-white/30 uppercase mb-1">Transaction Hash</div>
-                                                <div className="font-mono text-xs text-blue-400 break-all">{txHash}</div>
-                                                <a
-                                                    href={`https://sepolia.basescan.org/tx/${txHash}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="mt-2 inline-flex items-center gap-1 text-xs text-blue-400/70 hover:text-blue-400 transition-colors"
-                                                >
-                                                    <Globe className="w-3 h-3" />
-                                                    View on BaseScan →
-                                                </a>
-                                            </div>
-                                        )}
-
-                                        <button onClick={() => setCurrentStep(2)} className="gass-button gass-button-secondary">
-                                            Return to Profile
-                                        </button>
-                                    </>
+                    {currentStep === 3 && rewardProcessed && (
+                        <div className="gass-success-state">
+                            <div className="gass-success-icon">
+                                <CheckCircle className="w-9 h-9 text-green-400" />
+                            </div>
+                            <h3 className="gass-success-title">Tokens Sent!</h3>
+                            <p className="gass-success-subtitle">
+                                Your GASS tokens have been sent to your wallet on Base Sepolia.
+                            </p>
+                            {txHash && (
+                                <div className="gass-tx-block">
+                                    <div className="gass-tx-label">Transaction Hash</div>
+                                    <div className="gass-tx-hash">{txHash}</div>
+                                    <a
+                                        href={`https://sepolia.basescan.org/tx/${txHash}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="gass-tx-link"
+                                    >
+                                        <Globe className="w-3 h-3" />
+                                        View on BaseScan →
+                                    </a>
+                                </div>
+                            )}
+                            <div className="gass-success-actions">
+                                <button onClick={() => setCurrentStep(2)} className="gass-button gass-button-secondary">
+                                    Start New Claim
+                                </button>
+                                {txHash && (
+                                    <a
+                                        href={`https://sepolia.basescan.org/tx/${txHash}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="gass-button gass-button-outline"
+                                    >
+                                        <Globe className="w-4 h-4" />
+                                        View on BaseScan
+                                    </a>
                                 )}
-                            </>
-                        )}
-                    </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
             {/* GLOBAL ERROR TOAST */}
-            {
-                error && (
-                    <div className="mt-6 p-4 bg-red-500/20 border border-red-500/40 text-red-400 rounded-lg text-sm text-center animate-pulse">
-                        Error: {error}
-                    </div>
-                )
-            }
+            {error && (
+                <div className="gass-alert gass-alert-error mt-6" role="alert">
+                    <span className="gass-alert-icon">⚠</span>
+                    <span>Error: {error}</span>
+                    <button className="gass-error-dismiss" onClick={() => setError(null)}>×</button>
+                </div>
+            )}
 
             {/* DEBUG INFO */}
             {

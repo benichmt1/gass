@@ -58,7 +58,7 @@ export default function Main() {
       </div>
 
       <div className="gass-footer">
-        <div className="gass-footer-text">Created by MichaelBe • GitHub Activity Scoring System</div>
+        <div className="gass-footer-text">Created by Noid • <a href="https://github.com/michael-bey/gass" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '3px', opacity: 0.7 }}>github.com/michael-bey/gass</a></div>
       </div>
     </div>
   );

@@ -3,7 +3,8 @@
 import "./globals.css";
 import "./gass-theme.css";
 import { Space_Grotesk } from "next/font/google";
-import Providers from "@/lib/providers";
+import dynamic from "next/dynamic";
+const Providers = dynamic(() => import("@/lib/providers"), { ssr: false });
 import { SessionProvider } from "@/lib/SessionProvider";
 import { Toaster } from "@/app/components/ui/toaster";
 import { TooltipProvider } from "@/app/components/ui/tooltip";

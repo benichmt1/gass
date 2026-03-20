@@ -2424,14 +2424,13 @@ body:has(.gass-split-screen) .gass-container,
   gap: 0.75rem;
 }
 
-/* Step indicator - prominent at top */
+/* Step indicator - minimal, no glow */
 .gass-wizard-steps {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--glass-border);
+  padding: 0.5rem 0 1rem;
 }
 
 .gass-wizard-step {
@@ -2443,26 +2442,29 @@ body:has(.gass-split-screen) .gass-container,
 }
 
 .gass-wizard-step-number {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border: 1.5px solid var(--glass-border);
+  color: var(--text-tertiary);
+  background: transparent;
 }
 
 .gass-wizard-step.active .gass-wizard-step-number {
-  background: var(--accent-blue);
+  background: var(--accent-indigo);
+  border-color: var(--accent-indigo);
   color: white;
-  box-shadow: 0 0 20px rgba(10, 132, 255, 0.4);
 }
 
 .gass-wizard-step.completed .gass-wizard-step-number {
-  background: var(--system-green);
+  background: var(--accent-indigo);
+  border-color: var(--accent-indigo);
   color: white;
 }
 
@@ -2473,15 +2475,15 @@ body:has(.gass-split-screen) .gass-container,
 }
 
 .gass-wizard-step-label {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--text-tertiary);
 }
 
 .gass-wizard-step.active .gass-wizard-step-label {
-  color: var(--accent-blue);
+  color: var(--accent-indigo);
 }
 
 .gass-wizard-step.completed .gass-wizard-step-label {
@@ -2489,48 +2491,75 @@ body:has(.gass-split-screen) .gass-container,
 }
 
 .gass-wizard-connector {
-  width: 48px;
-  height: 2px;
+  width: 40px;
+  height: 1px;
   background: var(--glass-border);
   margin: 0 0.25rem;
 }
 
 .gass-wizard-connector.completed {
   background: var(--system-green);
+  opacity: 0.6;
 }
 
 /* Compact profile summary bar */
 .gass-profile-bar {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 0.375rem 0;
+}
+
+.gass-profile-bar-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gass-disconnect-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.625rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.gass-disconnect-btn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 69, 58, 0.4);
+  background: rgba(255, 69, 58, 0.06);
 }
 
 .gass-profile-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.75rem;
   border-radius: 100px;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 500;
   border: 1px solid;
   transition: all 0.2s ease;
 }
 
 .gass-profile-badge.connected {
-  background: rgba(48, 209, 88, 0.1);
-  border-color: rgba(48, 209, 88, 0.2);
+  background: rgba(48, 209, 88, 0.08);
+  border-color: rgba(48, 209, 88, 0.18);
   color: var(--system-green);
 }
 
 .gass-profile-badge.pending {
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   border-color: var(--glass-border);
   color: var(--text-tertiary);
 }
@@ -2600,36 +2629,29 @@ body:has(.gass-split-screen) .gass-container,
   line-height: 1.5;
 }
 
-/* Horizontal Action Bar - fills width with icon | text | button */
+/* Action Bar - vertical stack */
 .gass-action-bar {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
   width: 100%;
   padding: 0.5rem 0;
 }
 
-.gass-action-bar-icon {
-  flex-shrink: 0;
-  width: 64px;
-  height: 64px;
-  background: rgba(10, 132, 255, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.75rem;
+.gass-action-bar .gass-wizard-cta {
+  width: 100%;
+  min-width: unset;
 }
 
 .gass-action-bar-content {
-  flex: 1;
   text-align: left;
   min-width: 0;
 }
 
 .gass-action-bar-title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
@@ -2687,13 +2709,15 @@ body:has(.gass-split-screen) .gass-container,
 }
 
 .gass-result-card.eligible {
-  background: rgba(48, 209, 88, 0.1);
-  border: 1px solid rgba(48, 209, 88, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--system-green);
 }
 
 .gass-result-card.ineligible {
-  background: rgba(255, 69, 58, 0.1);
-  border: 1px solid rgba(255, 69, 58, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid #ff453a;
 }
 
 .gass-result-card-header {
@@ -2713,6 +2737,7 @@ body:has(.gass-split-screen) .gass-container,
   font-size: 1.125rem;
   font-weight: 700;
   text-align: left;
+  margin-bottom: 0.375rem;
 }
 
 .gass-result-card.eligible .gass-result-card-title {
@@ -2789,6 +2814,17 @@ body:has(.gass-split-screen) .gass-container,
   background: rgba(0, 0, 0, 0.04);
 }
 
+.light-theme .gass-disconnect-btn {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(60, 60, 67, 0.45);
+}
+
+.light-theme .gass-disconnect-btn:hover {
+  color: rgba(60, 60, 67, 0.8);
+  border-color: rgba(255, 69, 58, 0.35);
+  background: rgba(255, 69, 58, 0.05);
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .gass-onboarding-wizard {
@@ -2816,4 +2852,699 @@ body:has(.gass-split-screen) .gass-container,
     flex-direction: column;
     align-items: stretch;
   }
+
+  .gass-disconnect-btn {
+    justify-content: center;
+  }
+}
+/* ==============================================
+   FLOW COLUMNS — Two-column layout for Steps 2 & 3
+   ============================================== */
+
+.gass-flow-columns {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-secondary);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  .gass-flow-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left context panel */
+.gass-flow-left {
+  position: relative;
+  padding: 2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background: radial-gradient(ellipse at 60% 0%, rgba(99, 102, 241, 0.18) 0%, transparent 70%),
+              radial-gradient(ellipse at 20% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 60%),
+              var(--bg-tertiary);
+  border-right: 1px solid var(--glass-border);
+}
+
+@media (max-width: 768px) {
+  .gass-flow-left {
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+}
+
+.gass-flow-left-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gass-flow-left-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+.gass-flow-left-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.gass-flow-left-body {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Tier table */
+.gass-flow-tier-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.gass-flow-tier-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr;
+  align-items: center;
+  padding: 0.625rem 0.875rem;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.gass-flow-tier-row:last-child {
+  border-bottom: none;
+}
+
+.gass-flow-tier-row.header {
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.gass-flow-tier-row .gass-tier-badge {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+}
+
+/* Partner logos strip */
+.gass-flow-left-partners {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-top: 1rem;
+  margin-top: auto;
+  border-top: 1px solid var(--glass-border);
+}
+
+.gass-flow-partner-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.01em;
+}
+
+/* Right action panel */
+.gass-flow-right {
+  position: relative;
+  padding: 2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.gass-flow-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-indigo), transparent);
+  opacity: 0.7;
+}
+
+/* Missing tier badge variant */
+.gass-tier-badge.limited {
+  background: rgba(255, 159, 10, 0.1);
+  border-color: rgba(255, 159, 10, 0.2);
+  color: var(--system-orange);
+}
+
+/* ==============================================
+   SCORECARD — Circular ring + stat columns
+   ============================================== */
+
+.gass-scorecard {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.gass-scorecard-ring-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.gass-ring-svg {
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.gass-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 6;
+}
+
+.gass-ring-fill {
+  fill: none;
+  stroke: url(#ring-gradient);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.gass-ring-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.gass-scorecard-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.gass-scorecard-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.gass-scorecard-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* ==============================================
+   REWARD SUMMARY — Step 3 left panel
+   ============================================== */
+
+.gass-reward-summary {
+  justify-content: center;
+}
+
+.gass-reward-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.gass-reward-amount-number {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.gass-reward-amount-ticker {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #a78bfa;
+  letter-spacing: 0.02em;
+}
+
+.gass-reward-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.gass-reward-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.gass-reward-footnote {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+/* ==============================================
+   CLAIM CONFIRM — Step 3 right panel
+   ============================================== */
+
+.gass-claim-confirm-title {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.gass-claim-confirm-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.gass-claim-wallet-block {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+}
+
+.gass-claim-wallet-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.375rem;
+}
+
+.gass-claim-wallet-address {
+  font-family: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.875rem;
+  color: #a78bfa;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.gass-claim-footnote {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-align: center;
+  margin: 0;
+}
+
+/* ==============================================
+   SUCCESS STATE — Post-claim centered layout
+   ============================================== */
+
+.gass-success-state {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--bg-secondary);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.gass-success-state::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--system-green), transparent);
+}
+
+.gass-success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(48, 209, 88, 0.12);
+  border: 2px solid rgba(48, 209, 88, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 8px rgba(48, 209, 88, 0.06),
+    0 0 24px rgba(48, 209, 88, 0.2);
+}
+
+.gass-success-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--system-green);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.gass-success-subtitle {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 420px;
+  margin: 0;
+}
+
+.gass-tx-block {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  width: 100%;
+  max-width: 480px;
+  text-align: left;
+}
+
+.gass-tx-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.375rem;
+}
+
+.gass-tx-hash {
+  font-family: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  color: #a78bfa;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.gass-tx-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+  font-size: 0.75rem;
+  color: rgba(167, 139, 250, 0.7);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.gass-tx-link:hover {
+  color: #a78bfa;
+}
+
+.gass-success-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+/* Error dismiss button */
+.gass-error-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  opacity: 0.6;
+  padding: 0 0.25rem;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.gass-error-dismiss:hover {
+  opacity: 1;
+}
+
+/* ==============================================
+   LIGHT THEME OVERRIDES — Flow columns & new components
+   ============================================== */
+
+.light-theme .gass-flow-columns {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+.light-theme .gass-flow-left {
+  background:
+    radial-gradient(ellipse at 60% 0%, rgba(99, 102, 241, 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse at 20% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 60%),
+    #F5F5F7;
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-flow-right {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.light-theme .gass-flow-right::before {
+  opacity: 0.5;
+}
+
+.light-theme .gass-flow-tier-table {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-flow-tier-row {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.light-theme .gass-flow-tier-row.header {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.light-theme .gass-flow-left-partners {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-flow-partner-name {
+  color: rgba(60, 60, 67, 0.5);
+}
+
+.light-theme .gass-scorecard {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-ring-track {
+  stroke: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-reward-footnote {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-claim-wallet-block {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-success-state {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+.light-theme .gass-tx-block {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Step indicator — light mode */
+.light-theme .gass-wizard-step.active .gass-wizard-step-number {
+  background: var(--accent-indigo);
+  border-color: var(--accent-indigo);
+}
+
+.light-theme .gass-wizard-step.pending .gass-wizard-step-number {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: rgba(60, 60, 67, 0.4);
+}
+
+.light-theme .gass-wizard-connector {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .gass-profile-bar {
+  background: transparent;
+  border: none;
+}
+
+.light-theme .gass-profile-badge.connected {
+  background: rgba(48, 209, 88, 0.08);
+  border-color: rgba(48, 209, 88, 0.2);
+}
+
+.light-theme .gass-profile-badge.pending {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ==============================================
+   SCORECARD — Redesigned metric grid (no SVG ring)
+   ============================================== */
+
+.gass-scorecard {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.gass-scorecard-metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 1.25rem 1rem;
+}
+
+.gass-scorecard-divider {
+  width: 1px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+}
+
+.gass-metric-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.gass-metric-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.gass-metric-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--glass-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0.125rem 0;
+}
+
+.gass-metric-bar-fill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  min-width: 2px;
+}
+
+/* Tier label — inline text, no pill, just colored weight */
+.gass-tier-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.gass-tier-label.limited {
+  color: var(--system-orange);
+}
+
+.gass-tier-label.standard {
+  color: #818cf8; /* indigo-400 */
+}
+
+.gass-tier-label.bonus {
+  color: #a78bfa; /* violet-400 */
+}
+
+.gass-tier-label.none {
+  color: var(--text-tertiary);
+}
+
+/* Tier table uses tier-label instead of tier-badge */
+.gass-flow-tier-row .gass-tier-label {
+  font-size: 0.75rem;
+}
+
+/* Light mode scorecard */
+.light-theme .gass-scorecard {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-scorecard-divider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .gass-metric-bar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.gass-flow-partner-link {
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.gass-flow-partner-link:hover {
+  opacity: 1;
 }
