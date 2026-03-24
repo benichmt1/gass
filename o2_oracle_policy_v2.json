@@ -13,7 +13,7 @@
     {
       "Name": "getQualityScore",
       "Function": "getQuality_score(string)",
-      "Address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "Address": "0xa23F689466F1D6f93b0B598aAEf390Db2CA3614F",
       "ReturnType": "uint256",
       "ValuesToPass": "githubUsername",
       "MappedTrackerKeyValues": "",
@@ -22,7 +22,7 @@
     {
       "Name": "getLastUpdated",
       "Function": "getLast_updated(string)",
-      "Address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "Address": "0xa23F689466F1D6f93b0B598aAEf390Db2CA3614F",
       "ReturnType": "uint256",
       "ValuesToPass": "githubUsername",
       "MappedTrackerKeyValues": "",
@@ -31,7 +31,7 @@
     {
       "Name": "getReviewCount",
       "Function": "getReview_count(string)",
-      "Address": "0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2",
+      "Address": "0xa23F689466F1D6f93b0B598aAEf390Db2CA3614F",
       "ReturnType": "uint256",
       "ValuesToPass": "githubUsername",
       "MappedTrackerKeyValues": "",

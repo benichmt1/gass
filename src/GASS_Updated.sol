@@ -23,7 +23,7 @@ contract GASS_Updated is RulesEngineClientCustom {
     event BonusDistribution(address to, uint256 amount, string githubUsername);
 
     // O2 Oracle address
-    address public constant O2_ORACLE_ADDRESS = 0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2;
+    address public constant O2_ORACLE_ADDRESS = 0xa23F689466F1D6f93b0B598aAEf390Db2CA3614F;
 
     // Owner address (deployer)
     address public owner;

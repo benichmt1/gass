@@ -76,6 +76,16 @@ async function main() {
 
     await connectConfig(config, 0);
 
+    // ── Step 0: Unset old policy from GASS contract ───────────────────────────
+    const OLD_POLICY_ID = 6;
+    console.log(`Step 0: Unsetting old policy ${OLD_POLICY_ID} from GASS contract...`);
+    try {
+        await rulesEngine.unsetPolicies([OLD_POLICY_ID], GASS_ADDRESS);
+        console.log(`  ✓ Policy ${OLD_POLICY_ID} unset\n`);
+    } catch (e: any) {
+        console.log(`  ⚠ Could not unset policy ${OLD_POLICY_ID} (may not be applied): ${e.message}\n`);
+    }
+
     // ── Step 1: Create policy from JSON ───────────────────────────────────────
     console.log('Step 1: Creating policy from o2_oracle_policy_v2.json...');
     const policyData = readFileSync(

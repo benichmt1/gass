@@ -36,7 +36,7 @@ flowchart TD
     end
 
     subgraph Oracle["O2 Oracle"]
-        O2Contract["GitHub Activity Data<br/>0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2"]
+        O2Contract["GitHub Activity Data<br/>0xa23F689466F1D6f93b0B598aAEf390Db2CA3614F"]
     end
 
     User -->|"1\. Authenticate with GitHub"| WebApp
@@ -73,7 +73,7 @@ The Forte Rules Engine evaluates three on-chain metrics and assigns a tier on ea
 |-----------|---------|
 | GASS Contract | `0xF35C0460Df0678c21FE813971C5087B5fd03366A` |
 | GASS Token | `0x777E1Ad0Cfb52abbF5A5F70dB4382CC166d8DFf7` |
-| O2 Oracle | `0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2` |
+| O2 Oracle | `0xa23F689466F1D6f93b0B598aAEf390Db2CA3614F` |
 | Forte Rules Engine | `0x6189A916E3f190Bf3cE6247b7A0dE862d1De8387` |
 
 ## GitHub Verification
