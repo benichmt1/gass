@@ -12,7 +12,6 @@ GASS connects three key components to create a fair and transparent token distri
 
 1. **GitHub Action with OpenRouter**: Analyzes code reviews and pushes metrics to the O2 Oracle for tracking developers' projects and contributions.
    - [GitHub Action Workflow](/.github/workflows/push_quality_score.yml) and [Scripts](/.github/scripts/)
-   - Deployed at `0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2` on Base Sepolia
    - Tracks quality scores, activity timestamps, and contribution volume
    - Automatically runs on pull request events (open, sync, reopen)
 
