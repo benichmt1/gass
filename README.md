@@ -1,12 +1,12 @@
 # GASS - Github Activity Scoring System
 
-Automatically scores pull request code quality using AI and stores the results on-chain via the [O2 Oracle](https://o2-oracle.io). Part of the [GASS system](.github/docs/architecture.md) for meritocratic, Sybil-resistant token distribution — but works standalone in any repo that wants on-chain developer metrics.
+Automatically scores pull request code quality using AI and stores the results on-chain via the [O2 Oracle](https://sandbox.dashboard.api.o2-oracle.io). Part of the [GASS system](.github/docs/architecture.md) for meritocratic, Sybil-resistant token distribution — but works standalone in any repo that wants on-chain developer metrics.
 
 ## Getting Started
 
 ### 1. Create an O2 Oracle app
 
-Sign up at [o2-oracle.io](https://o2-oracle.io) and create an app with a property list. The property list schema should include:
+Sign up at [sandbox.dashboard.api.o2-oracle.io](https://sandbox.dashboard.api.o2-oracle.io) and create an app with a property list. The property list schema should include:
 
 | Field | Type |
 |-------|------|
