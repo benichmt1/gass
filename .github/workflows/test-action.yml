@@ -1,0 +1,26 @@
+name: Test GASS Action (Local)
+
+# Tests the action from the current branch using `uses: ./`
+# Trigger this by opening a PR — the action requires a pull_request event context.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - test-action  # Only runs on PRs targeting this branch, to avoid double-running with push_quality_score.yml
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: GASS Code Quality Score (local action test)
+        uses: ./
+        with:
+          o2_email: ${{ secrets.O2_EMAIL }}
+          o2_password: ${{ secrets.O2_PASSWORD }}
+          o2_app_id: ${{ secrets.O2_APP_ID }}
+          o2_prop_list_id: ${{ secrets.O2_PROP_LIST_ID }}
+          openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}

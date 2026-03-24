@@ -1,6 +1,6 @@
 name: 'GASS - Github Activity Scoring System'
 description: 'Analyzes PR code quality using OpenRouter and scores activity on O2 Oracle for GASS token distribution.'
-author: 'Thrackle'
+author: 'michael-bey'
 branding:
   icon: 'award'
   color: 'purple'

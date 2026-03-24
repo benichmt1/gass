@@ -136,7 +136,7 @@ jobs:
       - uses: actions/checkout@v3
       
       - name: GASS Code Quality Score
-        uses: michael-bey/gass@main
+        uses: michael-bey/gass@v1
         with:
           o2_email: ${{ secrets.O2_EMAIL }}
           o2_password: ${{ secrets.O2_PASSWORD }}
@@ -192,7 +192,7 @@ The O2 Oracle contains the following developer metrics:
 
 | GitHub Username | Quality Score | Last Updated | Review Count | Expected Distribution Tier |
 |-----------------|--------------|--------------|-------------|---------------------------|
-| michael-bey       | 63           | 1747331744   | 25          | Limited (50% allocation) |
+| *(populated by action runs)* | — | — | — | — |
 
 ## Use Cases
 
