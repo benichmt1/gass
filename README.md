@@ -151,6 +151,44 @@ The action will:
 3. Calculate a quality score.
 4. Update the developer's metrics in the O2 Oracle.
 
+#### Finding Your O2 Oracle Credentials
+
+You'll need four values from your O2 Oracle account. Here's how to find each one:
+
+**`O2_EMAIL` / `O2_PASSWORD`** — Your O2 Oracle account credentials (the email and password you use to log in to [sandbox.api.o2-oracle.io](https://sandbox.api.o2-oracle.io)).
+
+**`O2_APP_ID`** — The ID of the app you created in O2 Oracle. Note: this is *not* your organization ID. To find it, run:
+
+```bash
+npm install node-fetch
+node -e "
+const fetch = require('node-fetch');
+(async () => {
+  const r = await fetch('https://sandbox.api.o2-oracle.io/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email: 'YOUR_EMAIL', password: 'YOUR_PASSWORD'})
+  });
+  const {token} = await r.json();
+  const apps = await fetch('https://sandbox.api.o2-oracle.io/apps', {
+    headers: {Authorization: 'Bearer ' + token}
+  });
+  console.log(JSON.stringify(await apps.json(), null, 2));
+})();
+"
+```
+
+This prints your apps and their `id` fields — that's your `O2_APP_ID`.
+
+**`O2_PROP_LIST_ID`** — The ID of the property list within your app that stores developer scores. Once you have your `O2_APP_ID`, run the included helper script:
+
+```bash
+O2_EMAIL=your@email.com O2_PASSWORD=yourpassword O2_APP_ID=your-app-id \
+  node .github/scripts/get_property_lists.js
+```
+
+Look for the property list named **"GitHub Developer Scores"** (or similar) in the output — its `id` field is your `O2_PROP_LIST_ID`.
+
 ### Smart Contract
 
 The GASS contract is deployed at `0xF35C0460Df0678c21FE813971C5087B5fd03366A` on Base Sepolia with Policy ID `6`. It uses the Forte Rules Engine to apply distribution rules based on O2 Oracle data.
