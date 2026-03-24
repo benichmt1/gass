@@ -10,8 +10,8 @@ out/
 # ignore the diff
 *.diff
 
-# Docs
-docs/
+# Docs (Foundry build output — top-level only, not .github/docs/)
+/docs/
 
 # Dotenv files
 .env
