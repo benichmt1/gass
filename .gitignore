@@ -1,3 +1,7 @@
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
 # Compiler files
 cache/
 out/
@@ -19,6 +23,7 @@ out/
 !.env.example
 !.env.sample
 node_modules
+lib/openzeppelin-contracts/
 
 # Local environment files
 web-wallet-demo/.env.local
