@@ -35090,7 +35090,7 @@ async function run() {
         const requestBody = {
             operation: operation,
             rows: {
-                [operation === 'update' ? existingUser.row_id : githubUsername]: {
+                [githubUsername]: {
                     repo: repo,
                     repos: reposObj,
                     last_updated: Math.floor(Date.now() / 1000),

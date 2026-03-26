@@ -1,6 +1,6 @@
 {
   "name": "gass",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A quickstart project for utilizing the Forte Rules Engine through the SDK.",
   "keywords": [
     "forte",
