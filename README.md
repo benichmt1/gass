@@ -100,6 +100,7 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     permissions:
+      contents: read              # required for actions/checkout
       pull-requests: write        # required to post comments
     steps:
       - uses: actions/checkout@v4
