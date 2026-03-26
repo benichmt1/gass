@@ -91,6 +91,37 @@ jobs:
 
 That's it. On every PR, the action will fetch the diff, send it to OpenRouter for AI code review, calculate a 0–100 quality score, and update the contributor's record in the O2 Oracle.
 
+### Optional: PR comments
+
+To have GASS post the score and full AI review as a comment directly on the PR, add `permissions` and pass `github_token`:
+
+```yaml
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write        # required to post comments
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: GASS Code Quality Score
+        uses: michael-bey/gass@v1
+        with:
+          o2_email: ${{ secrets.O2_EMAIL }}
+          o2_password: ${{ secrets.O2_PASSWORD }}
+          o2_app_id: ${{ secrets.O2_APP_ID }}
+          o2_prop_list_id: ${{ secrets.O2_PROP_LIST_ID }}
+          openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}   # no new secret needed
+```
+
+`secrets.GITHUB_TOKEN` is automatically provided by GitHub Actions — no configuration required. When enabled, each PR will receive a comment from `github-actions[bot]` with:
+
+- **This PR score** — the raw score for this diff (0–100)
+- **Updated average** — the contributor's new weighted lifetime average
+- **Total reviews** — how many PRs have been scored for this contributor
+- **Full AI review** — the complete reasoning behind the score
+
 ## Inputs
 
 | Input | Required | Default | Description |
@@ -101,6 +132,7 @@ That's it. On every PR, the action will fetch the diff, send it to OpenRouter fo
 | `o2_prop_list_id` | Yes | — | O2 Oracle property list ID |
 | `openrouter_api_key` | Yes | — | OpenRouter API key |
 | `openrouter_model` | No | `anthropic/claude-opus-4.5` | Model to use for code review |
+| `github_token` | No | — | GitHub token for posting PR review comments. Pass `secrets.GITHUB_TOKEN`. |
 
 ## Use Cases
 

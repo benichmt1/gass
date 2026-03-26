@@ -25,6 +25,9 @@ inputs:
     description: 'Model to use on OpenRouter (e.g. anthropic/claude-3.5-sonnet)'
     required: false
     default: 'anthropic/claude-opus-4.5'
+  github_token:
+    description: 'GitHub token for posting PR review comments (optional). Pass secrets.GITHUB_TOKEN.'
+    required: false
 
 runs:
   using: 'node20'

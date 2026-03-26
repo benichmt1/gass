@@ -97,12 +97,12 @@ Reasoning: [detailed explanation of issues found and why the score was given]`;
   const score = scoreMatch ? parseInt(scoreMatch[1]) : 50; // Default to 50 if parsing fails
   
   console.log("Code review response:", reviewText);
-  return score;
+  return { score, reviewText };
 }
 
 async function main() {
   // Get code review score
-  const score = await getCodeReviewScore(prDiff);
+  const { score, reviewText } = await getCodeReviewScore(prDiff);
   console.log("Calculated quality score:", score);
 
   // 1. Login to get access token
@@ -276,6 +276,46 @@ async function main() {
 
   const publishData = await publishRes.json();
   console.log("Changes published:", JSON.stringify(publishData, null, 2));
+
+  // Post PR comment if token is available
+  const ghToken = process.env.GITHUB_TOKEN;
+  const prNumber = process.env.PR_NUMBER;
+  if (ghToken && prNumber) {
+    const [owner, repoName] = repo.split('/');
+    const scoreEmoji = score >= 80 ? '🟢' : score >= 60 ? '🟡' : '🔴';
+    const reviewCount = existingUser ? (existingUser.data.review_count || 0) + 1 : 1;
+
+    const body = [
+      `## ${scoreEmoji} GASS Code Review`,
+      ``,
+      `| | Value |`,
+      `|---|---|`,
+      `| **This PR score** | ${score}/100 |`,
+      `| **Updated average** | ${finalScore}/100 |`,
+      `| **Total reviews** | ${reviewCount} |`,
+      ``,
+      `### Review`,
+      reviewText,
+    ].join('\n');
+
+    const commentRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/issues/${prNumber}/comments`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ghToken}`,
+        },
+        body: JSON.stringify({ body }),
+      }
+    );
+
+    if (commentRes.ok) {
+      console.log("Posted PR comment with code review results.");
+    } else {
+      console.error("Failed to post PR comment:", await commentRes.text());
+    }
+  }
 }
 
 main().catch(console.error); 

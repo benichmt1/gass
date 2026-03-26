@@ -35007,7 +35007,7 @@ Reasoning: [detailed explanation of issues found and why the score was given]`;
     const scoreMatch = reviewText.match(/Score:\s*(\d+)/);
     const score = scoreMatch ? parseInt(scoreMatch[1]) : 50;
     console.log("Code review response:", reviewText);
-    return score;
+    return { score, reviewText };
 }
 async function run() {
     try {
@@ -35017,6 +35017,7 @@ async function run() {
         const propListId = core.getInput(INPUTS.O2_PROP_LIST_ID, { required: true });
         const openRouterApiKey = core.getInput(INPUTS.OPENROUTER_API_KEY, { required: true });
         const openRouterModel = core.getInput(INPUTS.OPENROUTER_MODEL) || 'anthropic/claude-opus-4.5';
+        const githubToken = core.getInput('github_token');
         // Ensure we are in a PR context
         if (!github.context.payload.pull_request) {
             core.setFailed('This action must run on a pull_request event.');
@@ -35044,7 +35045,7 @@ async function run() {
         }
         // Limit diff size to prevent token limits
         const truncatedDiff = diffOutput.substring(0, 10000);
-        const score = await getCodeReviewScore(truncatedDiff, openRouterApiKey, openRouterModel);
+        const { score, reviewText } = await getCodeReviewScore(truncatedDiff, openRouterApiKey, openRouterModel);
         core.info(`Calculated quality score: ${score}`);
         // Login to O2
         const loginRes = await (0, node_fetch_1.default)("https://sandbox.api.o2-oracle.io/login", {
@@ -35121,6 +35122,32 @@ async function run() {
             throw new Error(`Failed to publish: ${await publishRes.text()}`);
         }
         core.info("Successfully published quality score to O2 Oracle.");
+        if (githubToken) {
+            const prNumber = github.context.payload.pull_request.number;
+            const { owner, repo: repoName } = github.context.repo;
+            const octokit = github.getOctokit(githubToken);
+            const scoreEmoji = score >= 80 ? '🟢' : score >= 60 ? '🟡' : '🔴';
+            const reviewCount = existingUser ? (existingUser.data.review_count || 0) + 1 : 1;
+            const body = [
+                `## ${scoreEmoji} GASS Code Review`,
+                ``,
+                `| | Value |`,
+                `|---|---|`,
+                `| **This PR score** | ${score}/100 |`,
+                `| **Updated average** | ${finalScore}/100 |`,
+                `| **Total reviews** | ${reviewCount} |`,
+                ``,
+                `### Review`,
+                reviewText,
+            ].join('\n');
+            await octokit.rest.issues.createComment({
+                owner,
+                repo: repoName,
+                issue_number: prNumber,
+                body,
+            });
+            core.info('Posted PR comment with code review results.');
+        }
     }
     catch (error) {
         core.setFailed(error.message);
