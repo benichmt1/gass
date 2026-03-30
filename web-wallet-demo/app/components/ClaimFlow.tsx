@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { isEthereumWallet } from '@dynamic-labs/ethereum';
-import { type Address, type Hex } from 'viem';
 import {
     checkDistributionStatus,
-    processReward,
     checkEligibilityTier,
-    verifyAndSignEligibility,
+    claimReward,
     RewardTier,
     TIER_AMOUNTS,
     type EligibilityResult,
@@ -279,31 +276,11 @@ export default function ClaimFlow() {
                 setTxHash(`0x${Math.random().toString(16).substring(2, 42)}`);
                 setAlreadyReceived(true);
             } else {
-                if (!isEthereumWallet(primaryWallet)) {
-                    throw new Error('Primary wallet is not an Ethereum wallet');
-                }
-
-                // 1. Verify eligibility and get trusted signature from backend
-                const verificationResult = await verifyAndSignEligibility(
+                // Backend signs + submits the transaction — user pays no gas
+                const result = await claimReward(
                     githubUsername,
                     primaryWallet.address as string,
                     currentProof as string,
-                    currentTimestamp!
-                );
-
-                if (!verificationResult.success || !verificationResult.signature) {
-                    throw new Error(verificationResult.error || "Server verification failed");
-                }
-
-                if (!verificationResult.amount) throw new Error('Backend returned no amount');
-
-                const walletClient = await primaryWallet.getWalletClient();
-                const result = await processReward(
-                    walletClient,
-                    primaryWallet.address as Address,
-                    verificationResult.amount,
-                    githubUsername,
-                    verificationResult.signature,
                     currentTimestamp!
                 );
 
@@ -312,7 +289,7 @@ export default function ClaimFlow() {
                     setTxHash(result.txHash || null);
                     setAlreadyReceived(true);
                 } else {
-                    throw new Error(result.error || "Claim failed");
+                    throw new Error(result.error || 'Claim failed');
                 }
             }
         } catch (err: any) {
@@ -711,7 +688,7 @@ export default function ClaimFlow() {
                             <div className="gass-flow-right gass-claim-confirm">
                                 <h3 className="gass-claim-confirm-title">Claim Your Reward</h3>
                                 <p className="gass-claim-confirm-description">
-                                    Confirm the transaction to receive your GASS tokens directly to your connected wallet.
+                                    Click below to receive your GASS tokens. Gas fees are covered — no ETH required.
                                 </p>
                                 <div className="gass-claim-wallet-block">
                                     <div className="gass-claim-wallet-label">Receiving wallet</div>

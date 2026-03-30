@@ -4,7 +4,7 @@ import { baseSepolia } from 'viem/chains';
 // Contract addresses
 export const GASS_CONTRACT_ADDRESS  = process.env.NEXT_PUBLIC_GASS_CONTRACT_ADDRESS  || '0xF35C0460Df0678c21FE813971C5087B5fd03366A';
 export const GASS_TOKEN_ADDRESS     = process.env.NEXT_PUBLIC_GASS_TOKEN_ADDRESS     || '0x777E1Ad0Cfb52abbF5A5F70dB4382CC166d8DFf7';
-export const O2_ORACLE_ADDRESS      = process.env.NEXT_PUBLIC_O2_ORACLE_ADDRESS      || '0x5441D1C780E82959d48dcE6af9E36Dbe8f1992B2';
+export const O2_ORACLE_ADDRESS      = process.env.NEXT_PUBLIC_O2_ORACLE_ADDRESS      || '0xa23F689466F1D6f93b0B598aAEf390Db2CA3614F';
 export const RPC_URL                = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL   || 'https://base-sepolia-rpc.publicnode.com';
 
 // Tier reward amounts (in GASS wei)
@@ -164,6 +164,26 @@ export async function checkEligibilityTier(githubUsername: string): Promise<Elig
       eligibleTier: RewardTier.NONE,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
+  }
+}
+
+export async function claimReward(
+  githubUsername: string,
+  address:        string,
+  proof:          string,
+  timestamp:      number,
+): Promise<{ success: boolean; txHash?: string; tier?: string; amount?: bigint; error?: string }> {
+  try {
+    const response = await fetch('/api/claim', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ githubUsername, address, proof, timestamp }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Claim failed');
+    return { success: true, txHash: data.txHash, tier: data.tier, amount: BigInt(data.amount) };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown claim error' };
   }
 }
 
